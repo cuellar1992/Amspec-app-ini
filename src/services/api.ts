@@ -7,9 +7,11 @@ import router from '@/router'
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
 
-// Log API URL for debugging
-console.log('🔗 API Base URL:', API_BASE_URL)
-console.log('🌍 Environment:', import.meta.env.MODE)
+// Log API URL for debugging (solo en desarrollo)
+if (import.meta.env.DEV) {
+  console.log('🔗 API Base URL:', API_BASE_URL)
+  console.log('🌍 Environment:', import.meta.env.MODE)
+}
 
 // Create axios instance with default config
 const api = axios.create({

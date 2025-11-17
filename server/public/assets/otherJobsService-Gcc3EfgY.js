@@ -1,0 +1,1 @@
+import{s as t}from"./index-BEwWJCfq.js";const r=async s=>(await t.get("/other-jobs",{params:s})).data,n=async s=>(await t.post("/other-jobs",s)).data,c=async(s,e)=>(await t.put(`/other-jobs/${s}`,e)).data,p=async s=>(await t.delete(`/other-jobs/${s}`)).data;export{n as c,p as d,r as l,c as u};
