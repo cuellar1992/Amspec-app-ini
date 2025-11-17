@@ -99,10 +99,8 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     // Initialize Express app
     const app = express();
 
-    // Security middleware (solo en desarrollo, en producción Helmet puede causar problemas con Vite)
-    if (process.env.NODE_ENV !== 'production') {
-      app.use(securityHeaders);
-    }
+    // Security middleware (aplicar en todos los entornos)
+    app.use(securityHeaders);
 
     // CORS configuration
     const allowedOrigins = [
@@ -113,28 +111,54 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       'http://127.0.0.1:5173',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:8080',
+      // DigitalOcean Apps URLs
+      'https://ghost-app-oo46l.ondigitalocean.app',
+      // DigitalOcean App Platform también puede usar URLs internas
+      'https://ghost-app-oo46l.ondigitalocean.app:443',
     ].filter(Boolean); // Remover valores undefined/null
+
+    // DigitalOcean Public Static Ingress IPs (para referencia/whitelist)
+    // Estas IPs son las de entrada de DigitalOcean, no se usan en CORS
+    // pero son útiles para:
+    // - Configurar firewalls externos (ej: MongoDB Atlas IP whitelist)
+    // - Rate limiting por IP
+    // - Logs y analytics
+    const digitalOceanIngressIPs = [
+      '162.159.140.98',
+      '172.66.0.96',
+    ];
+
+    // Log de IPs permitidas en producción (útil para debugging)
+    if (process.env.NODE_ENV === 'production') {
+      console.log('📋 DigitalOcean Ingress IPs:', digitalOceanIngressIPs.join(', '));
+    }
 
     app.use(
       cors({
         origin: (origin, callback) => {
-          // En producción, requerir FRONTEND_URL
+          console.log('🔍 CORS request from origin:', origin);
+
+          // Permitir peticiones sin origin (ej: Postman, navegación directa, mismo servidor)
+          if (!origin) {
+            console.log('✅ CORS permitido: Sin origin header (navegación directa)');
+            return callback(null, true);
+          }
+
+          // En producción
           if (process.env.NODE_ENV === 'production') {
-            if (!process.env.FRONTEND_URL) {
-              console.warn('⚠️  Advertencia: FRONTEND_URL no configurada en producción');
-              return callback(new Error('FRONTEND_URL debe estar configurada en producción'));
-            }
-            // Permitir peticiones sin origin (navegación directa del navegador)
-            // O peticiones del mismo origen (FRONTEND_URL)
-            if (!origin || origin === process.env.FRONTEND_URL) {
+            // Verificar si el origen está en la lista de permitidos
+            if (allowedOrigins.includes(origin)) {
+              console.log('✅ CORS permitido:', origin);
               callback(null, true);
             } else {
               console.warn('🚫 CORS bloqueó origen:', origin);
+              console.warn('   Orígenes permitidos:', allowedOrigins);
               callback(new Error('No permitido por CORS'));
             }
           } else {
-            // En desarrollo, permitir orígenes de desarrollo
-            if (!origin || allowedOrigins.includes(origin)) {
+            // En desarrollo, permitir todos los orígenes de desarrollo
+            if (allowedOrigins.includes(origin)) {
+              console.log('✅ CORS permitido (dev):', origin);
               callback(null, true);
             } else {
               console.warn('🚫 CORS bloqueó origen en desarrollo:', origin);
@@ -218,8 +242,13 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       // Servir archivos estáticos con configuración específica
       app.use(express.static(publicPath, {
         maxAge: '1d', // Cache por 1 día
+        etag: true,
+        lastModified: true,
+        index: false, // No servir index.html automáticamente desde express.static
         setHeaders: (res, filePath) => {
-          console.log('📦 Serving static file:', filePath);
+          const relativePath = path.relative(publicPath, filePath);
+          console.log('📦 Serving static file:', relativePath);
+
           // Asegurar MIME types correctos
           if (filePath.endsWith('.js')) {
             res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
@@ -227,16 +256,34 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
             res.setHeader('Content-Type', 'text/css; charset=utf-8');
           } else if (filePath.endsWith('.html')) {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          } else if (filePath.endsWith('.json')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          } else if (filePath.endsWith('.svg')) {
+            res.setHeader('Content-Type', 'image/svg+xml');
+          } else if (filePath.endsWith('.png')) {
+            res.setHeader('Content-Type', 'image/png');
+          } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+            res.setHeader('Content-Type', 'image/jpeg');
+          } else if (filePath.endsWith('.ico')) {
+            res.setHeader('Content-Type', 'image/x-icon');
           }
+
+          // Deshabilitar CSP para archivos estáticos
+          res.removeHeader('Content-Security-Policy');
         }
       }));
 
       // Manejar rutas de SPA (Single Page Application)
       // Servir index.html para todas las rutas que no sean /api/* o /health
-      // express.static ya maneja /assets/* automáticamente
       app.get('*', (req, res, next) => {
         // Si la ruta comienza con /api o es /health, pasar al siguiente handler (404)
         if (req.path.startsWith('/api') || req.path === '/health') {
+          return next();
+        }
+
+        // Si es un archivo estático que no existe, pasar al 404
+        if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|json|woff|woff2|ttf|eot)$/)) {
+          console.warn('⚠️  Static file not found:', req.path);
           return next();
         }
 

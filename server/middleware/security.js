@@ -3,12 +3,14 @@ import rateLimit from 'express-rate-limit';
 
 // Configuración de Helmet para seguridad HTTP
 export const securityHeaders = helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? false : {
+  contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      // Permitir scripts inline con hash específico o 'unsafe-inline' en producción
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", process.env.FRONTEND_URL, process.env.BACKEND_URL].filter(Boolean),
     },
   },
   crossOriginEmbedderPolicy: false,
