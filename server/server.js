@@ -213,14 +213,27 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       const publicPath = path.join(__dirname, 'public');
       console.log('📁 Serving static files from:', publicPath);
 
-      // Servir archivos estáticos
-      app.use(express.static(publicPath));
+      // Servir archivos estáticos con configuración específica
+      app.use(express.static(publicPath, {
+        maxAge: '1d', // Cache por 1 día
+        setHeaders: (res, filePath) => {
+          console.log('📦 Serving static file:', filePath);
+          // Asegurar MIME types correctos
+          if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+          } else if (filePath.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          }
+        }
+      }));
 
       // Manejar rutas de SPA (Single Page Application)
-      // Todas las rutas que no sean /api/* ni /health deben servir index.html
+      // Todas las rutas que no sean /api/* ni /health ni /assets/* deben servir index.html
       app.get('*', (req, res) => {
-        // Si la ruta comienza con /api o /health, no hacer nada (ya manejado arriba)
-        if (req.path.startsWith('/api') || req.path === '/health') {
+        // Si la ruta comienza con /api, /health, o /assets, no hacer nada (ya manejado arriba)
+        if (req.path.startsWith('/api') || req.path === '/health' || req.path.startsWith('/assets')) {
           return res.status(404).json({
             success: false,
             message: 'API endpoint not found',
@@ -230,6 +243,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
         // Servir index.html para todas las demás rutas (SPA routing)
         const indexPath = path.join(publicPath, 'index.html');
         console.log('📄 Serving index.html for route:', req.path);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.sendFile(indexPath, (err) => {
           if (err) {
             console.error('❌ Error serving index.html:', err);
