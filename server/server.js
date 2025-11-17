@@ -159,8 +159,8 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       });
     });
 
-    // Routes
-    app.get('/', (req, res) => {
+    // API info endpoint
+    app.get('/api', (req, res) => {
       res.json({
         message: '🚢 AmSpec Backend API',
         version: '1.0.0',
@@ -209,21 +209,28 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     // Serve static files from frontend build (producción)
     if (process.env.NODE_ENV === 'production') {
       const publicPath = path.join(__dirname, 'public');
+      console.log('📁 Serving static files from:', publicPath);
 
       // Servir archivos estáticos
       app.use(express.static(publicPath));
 
       // Manejar rutas de SPA (Single Page Application)
-      // Todas las rutas que no sean /api/* deben servir index.html
-      app.get('*', (req, res, next) => {
-        // Si la ruta es una API, pasar al siguiente middleware
-        if (req.path.startsWith('/api')) {
-          return next();
+      // Todas las rutas que no sean /api/* ni /health deben servir index.html
+      app.get('*', (req, res) => {
+        // Si la ruta comienza con /api o /health, no hacer nada (ya manejado arriba)
+        if (req.path.startsWith('/api') || req.path === '/health') {
+          return res.status(404).json({
+            success: false,
+            message: 'API endpoint not found',
+          });
         }
+
         // Servir index.html para todas las demás rutas (SPA routing)
-        res.sendFile(path.join(publicPath, 'index.html'), (err) => {
+        const indexPath = path.join(publicPath, 'index.html');
+        console.log('📄 Serving index.html for route:', req.path);
+        res.sendFile(indexPath, (err) => {
           if (err) {
-            console.error('Error serving index.html:', err);
+            console.error('❌ Error serving index.html:', err);
             res.status(500).send('Error loading application');
           }
         });
