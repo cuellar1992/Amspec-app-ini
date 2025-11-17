@@ -727,12 +727,22 @@ export const verifyAuthentication = async (req, res) => {
 export const listPasskeys = async (req, res) => {
   try {
     const passkeys = await Passkey.find({ user: req.user._id })
-      .select('name deviceType createdAt lastUsed transports')
+      .select('_id name deviceType createdAt lastUsed transports')
       .sort({ createdAt: -1 });
+
+    // Transform _id to id for frontend consistency
+    const transformedPasskeys = passkeys.map(passkey => ({
+      id: passkey._id.toString(),
+      name: passkey.name,
+      deviceType: passkey.deviceType,
+      createdAt: passkey.createdAt,
+      lastUsed: passkey.lastUsed,
+      transports: passkey.transports,
+    }));
 
     res.json({
       success: true,
-      data: { passkeys },
+      data: { passkeys: transformedPasskeys },
     });
   } catch (error) {
     console.error('Error listing passkeys:', error);
