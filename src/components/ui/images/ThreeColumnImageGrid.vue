@@ -1,3 +1,15 @@
+<script setup>
+import image01 from '@/assets/images/grid-image/image-01.png'
+import image02 from '@/assets/images/grid-image/image-02.png'
+import image03 from '@/assets/images/grid-image/image-03.png'
+
+const images = [
+  { src: image01, alt: 'Grid image 1' },
+  { src: image02, alt: 'Grid image 2' },
+  { src: image03, alt: 'Grid image 3' },
+]
+</script>
+
 <template>
   <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
     <div v-for="(image, index) in images" :key="index">
@@ -9,11 +21,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-const images = [
-  { src: '/images/grid-image/image-01.png', alt: 'Grid image 1' },
-  { src: '/images/grid-image/image-02.png', alt: 'Grid image 2' },
-  { src: '/images/grid-image/image-03.png', alt: 'Grid image 3' },
-]
-</script>
