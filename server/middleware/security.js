@@ -2,24 +2,10 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 // Configuración de Helmet para seguridad HTTP
+// CSP deshabilitado completamente para evitar problemas con scripts inline,
+// Google Fonts, y conexiones al backend en producción
 export const securityHeaders = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      // Permitir estilos inline y de Google Fonts
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      // Permitir scripts inline (necesario para el script de GitHub Pages SPA en index.html)
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrcElem: ["'self'", "'unsafe-inline'"],
-      // Permitir imágenes de cualquier origen HTTPS
-      imgSrc: ["'self'", 'data:', 'https:'],
-      // Permitir fuentes de Google Fonts
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      // Permitir conexiones al backend y otros servicios
-      connectSrc: ["'self'", process.env.FRONTEND_URL, process.env.BACKEND_URL].filter(Boolean),
-    },
-  },
+  contentSecurityPolicy: false, // Deshabilitado completamente
   crossOriginEmbedderPolicy: false,
 });
 

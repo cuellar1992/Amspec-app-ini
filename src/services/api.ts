@@ -2,12 +2,14 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import router from '@/router'
 
 // Base URL for API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// En producción, usar ruta relativa (mismo servidor)
+// En desarrollo, usar localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
 
-// Log API URL for debugging (solo en desarrollo)
-if (import.meta.env.DEV) {
-  console.log('🔗 API Base URL:', API_BASE_URL)
-}
+// Log API URL for debugging
+console.log('🔗 API Base URL:', API_BASE_URL)
+console.log('🌍 Environment:', import.meta.env.MODE)
 
 // Create axios instance with default config
 const api = axios.create({

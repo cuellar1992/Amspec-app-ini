@@ -1,0 +1,1 @@
+import{_ as s}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{a as o,b as r,e as n,D as t}from"./index-BDXnSKSk.js";const a={},c={class:"min-h-screen"};function l(e,_){return o(),r("div",c,[n("main",null,[t(e.$slots,"default")])])}const d=s(a,[["render",l]]);export{d as F};
