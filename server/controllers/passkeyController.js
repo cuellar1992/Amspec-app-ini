@@ -10,21 +10,42 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 
 // Configuration
 const RP_NAME = 'AmSpec App';
-const RP_ID = process.env.RP_ID || 'localhost';
-const ORIGIN = process.env.ORIGIN || 'http://localhost:5173';
+
+// En producción, obtener el dominio desde la URL del request
+// En desarrollo, usar localhost
+const getRP_ID = (req) => {
+  if (process.env.RP_ID) {
+    return process.env.RP_ID;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    // Extraer el hostname del request en producción
+    return req?.get('host')?.split(':')[0] || 'ghost-app-oo46l.ondigitalocean.app';
+  }
+  return 'localhost';
+};
+
+const getORIGIN = (req) => {
+  if (process.env.ORIGIN) {
+    return process.env.ORIGIN;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    // Construir la URL completa basada en el request
+    const protocol = req?.get('x-forwarded-proto') || req?.protocol || 'https';
+    const host = req?.get('host') || 'ghost-app-oo46l.ondigitalocean.app';
+    return `${protocol}://${host}`;
+  }
+  return 'http://localhost:5173';
+};
 
 // @desc    Generate registration options for a new passkey
 // @route   POST /api/auth/passkey/register-options
 // @access  Private
 export const generateRegisterOptions = async (req, res) => {
   try {
-    // Validar variables de entorno críticas
-    if (!RP_ID || RP_ID === 'localhost') {
-      console.warn('⚠️ RP_ID está usando el valor por defecto "localhost". Para producción, configura RP_ID en .env');
-    }
-    if (!ORIGIN || ORIGIN === 'http://localhost:5173') {
-      console.warn('⚠️ ORIGIN está usando el valor por defecto. Para producción, configura ORIGIN en .env');
-    }
+    const RP_ID = getRP_ID(req);
+    const ORIGIN = getORIGIN(req);
+
+    console.log('🔐 Passkey registration - RP_ID:', RP_ID, 'ORIGIN:', ORIGIN);
 
     // Incluir currentChallenge explícitamente para poder guardarlo después
     const user = await User.findById(req.user._id).select('+currentChallenge');
@@ -118,6 +139,9 @@ export const generateRegisterOptions = async (req, res) => {
 // @access  Private
 export const verifyRegistration = async (req, res) => {
   try {
+    const RP_ID = getRP_ID(req);
+    const ORIGIN = getORIGIN(req);
+
     const { credential, name } = req.body;
 
     if (!credential || !name) {
@@ -385,6 +409,8 @@ export const verifyRegistration = async (req, res) => {
 // @access  Public
 export const generateLoginOptions = async (req, res) => {
   try {
+    const RP_ID = getRP_ID(req);
+
     const { email } = req.body;
 
     let allowCredentials = undefined;
@@ -433,6 +459,11 @@ export const generateLoginOptions = async (req, res) => {
 // @access  Public
 export const verifyAuthentication = async (req, res) => {
   try {
+    const RP_ID = getRP_ID(req);
+    const ORIGIN = getORIGIN(req);
+
+    console.log('🔐 Passkey login - RP_ID:', RP_ID, 'ORIGIN:', ORIGIN);
+
     const { credential, challenge } = req.body;
 
     if (!credential || !challenge) {
