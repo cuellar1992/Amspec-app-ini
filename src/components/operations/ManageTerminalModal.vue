@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-50" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"
@@ -31,9 +31,9 @@
             >
               <!-- Modal Header -->
               <div
-                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
+                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
               >
-                <DialogTitle class="text-xl font-semibold text-gray-900 dark:text-white">
+                <DialogTitle class="text-lg font-semibold text-gray-900 dark:text-white">
                   Manage Terminals & Berths
                 </DialogTitle>
                 <button
@@ -57,20 +57,20 @@
               </div>
 
               <!-- Add New Terminal Form -->
-              <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
-                <form @submit.prevent="handleAdd" class="space-y-3">
-                  <div class="flex gap-3">
+              <div class="border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gray-50 dark:bg-gray-900/50">
+                <form @submit.prevent="handleAdd" class="space-y-2.5">
+                  <div class="flex gap-2">
                     <input
                       v-model="newTerminal.name"
                       type="text"
                       placeholder="Enter new terminal name"
-                      class="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
+                      class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
                       required
                     />
                     <button
                       type="submit"
                       :disabled="isAdding || !newTerminal.name.trim()"
-                      class="rounded-lg bg-brand-500 px-6 py-2.5 text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                      class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200"
                     >
                       <span v-if="isAdding">Adding...</span>
                       <span v-else>Add Terminal</span>
@@ -125,7 +125,7 @@
               </div>
 
               <!-- Terminals List -->
-              <div class="max-h-[500px] overflow-y-auto px-6 py-4">
+              <div class="max-h-[500px] overflow-y-auto px-5 py-3">
                 <div v-if="isLoading" class="text-center py-12">
                   <div
                     class="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-brand-500 border-r-transparent"
@@ -145,25 +145,25 @@
                   </p>
                 </div>
 
-                <div v-else class="space-y-3">
+                <div v-else class="space-y-2.5">
                   <div
                     v-for="terminal in terminals"
                     :key="terminal._id"
-                    class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200"
+                    class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200"
                   >
                     <!-- Terminal Header -->
-                    <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-start justify-between mb-2">
                       <div class="flex-1 min-w-0">
                         <input
                           v-if="editingId === terminal._id"
                           v-model="editingName"
                           type="text"
-                          class="w-full max-w-md rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:border-brand-800 transition-all duration-200"
+                          class="w-full max-w-md rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:border-brand-800 transition-all duration-200"
                           @keyup.enter="handleUpdate(terminal._id)"
                           @keyup.esc="cancelEdit"
                         />
                         <div v-else class="flex items-center gap-2">
-                          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ terminal.name }}</h3>
+                          <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ terminal.name }}</h3>
                           <span
                             v-if="!terminal.isActive"
                             class="text-xs px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 font-medium"
@@ -179,13 +179,13 @@
                           <button
                             @click="handleUpdate(terminal._id)"
                             :disabled="isUpdating"
-                            class="rounded-lg px-3 py-1.5 text-sm bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-all duration-200 font-medium shadow-sm hover:shadow"
+                            class="rounded-lg px-3 py-1.5 text-xs bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-all duration-200 font-medium"
                           >
                             Save
                           </button>
                           <button
                             @click="cancelEdit"
-                            class="rounded-lg px-3 py-1.5 text-sm bg-gray-500 text-white hover:bg-gray-600 transition-all duration-200 font-medium shadow-sm hover:shadow"
+                            class="rounded-lg px-3 py-1.5 text-xs bg-gray-500 text-white hover:bg-gray-600 transition-all duration-200 font-medium"
                           >
                             Cancel
                           </button>
@@ -285,11 +285,23 @@
       </div>
     </Dialog>
   </TransitionRoot>
+
+  <!-- Delete Confirmation Modal -->
+  <ConfirmationModal
+    :isOpen="showDeleteConfirm"
+    title="Delete Terminal"
+    message="Are you sure you want to delete this terminal? This action cannot be undone."
+    variant="danger"
+    confirmText="Delete"
+    @confirm="confirmDelete"
+    @close="closeDeleteConfirm"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import dropdownService from '@/services/dropdownService'
 import { useToast } from 'vue-toastification'
 
@@ -334,6 +346,10 @@ const newTerminal = ref({
   berths: [] as string[],
   requiresLineSampling: false,
 })
+
+// Delete confirmation state
+const showDeleteConfirm = ref(false)
+const terminalToDelete = ref<string | null>(null)
 
 // Load data
 const loadTerminals = async () => {
@@ -509,12 +525,17 @@ const toggleLineSampling = async (terminal: Terminal) => {
 }
 
 // Delete terminal
-const handleDelete = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this terminal?')) return
+const handleDelete = (id: string) => {
+  terminalToDelete.value = id
+  showDeleteConfirm.value = true
+}
 
-  isDeletingId.value = id
+const confirmDelete = async () => {
+  if (!terminalToDelete.value) return
+
+  isDeletingId.value = terminalToDelete.value
   try {
-    const response = await dropdownService.deleteTerminal(id)
+    const response = await dropdownService.deleteTerminal(terminalToDelete.value)
 
     if (response.success) {
       toast.success('Terminal deleted successfully')
@@ -528,7 +549,13 @@ const handleDelete = async (id: string) => {
     toast.error(error.response?.data?.message || 'Failed to delete terminal')
   } finally {
     isDeletingId.value = null
+    terminalToDelete.value = null
   }
+}
+
+const closeDeleteConfirm = () => {
+  showDeleteConfirm.value = false
+  terminalToDelete.value = null
 }
 
 // Handle close

@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-[99999]" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"

@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-50" @close="handleCancel">
+    <Dialog as="div" class="relative z-[100001]" @close="handleCancel">
       <TransitionChild
         as="template"
         enter="ease-out duration-300"

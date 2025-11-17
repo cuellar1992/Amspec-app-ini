@@ -102,7 +102,10 @@
               <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ formatLastLogin(user.lastLogin) }}</p>
             </td>
             <td class="px-5 py-4 sm:px-6">
-              <div class="flex items-center gap-2">
+              <div v-if="isCurrentUser(user)" class="flex items-center">
+                <span class="text-xs text-gray-500 dark:text-gray-400 italic">Your account</span>
+              </div>
+              <div v-else class="flex items-center gap-2">
                 <button
                   @click="$emit('edit', user)"
                   class="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-all"
@@ -140,10 +143,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { Edit, Trash2, UserMinus, UserPlus } from 'lucide-vue-next'
 import userService from '@/services/userService'
 import type { User } from '@/services/userService'
+import authService from '@/services/authService'
 
 defineEmits<{
   edit: [user: User]
@@ -157,6 +161,14 @@ const props = defineProps<{
 
 const users = ref<User[]>([])
 const isLoading = ref(false)
+
+// Get current logged-in user
+const currentUser = computed(() => authService.getCurrentUser())
+
+// Check if user is the current logged-in user
+const isCurrentUser = (user: User) => {
+  return currentUser.value?._id === user._id
+}
 
 // Format last login date
 const formatLastLogin = (lastLogin?: string) => {

@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-[99999]" @close="handleClose">
+    <Dialog as="div" class="relative z-[100001]" @close="handleClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"
@@ -27,40 +27,40 @@
             leave-to="opacity-0 scale-95 translate-y-4"
           >
             <DialogPanel
-              class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-2xl transition-all"
+              class="w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all"
             >
               <!-- Icon and Title -->
-              <div class="px-6 pt-6 pb-4 text-center">
+              <div class="px-5 pt-5 pb-3 text-center">
                 <div
                   :class="[
-                    'mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4',
+                    'mx-auto flex h-12 w-12 items-center justify-center rounded-full mb-3',
                     variantClasses[variant].iconContainer,
                   ]"
                 >
-                  <component :is="icons[variant]" class="h-8 w-8" />
+                  <component :is="icons[variant]" class="h-6 w-6" />
                 </div>
 
-                <DialogTitle :class="['text-2xl font-bold text-gray-900 dark:text-white mb-2']">
+                <DialogTitle :class="['text-lg font-bold text-gray-900 dark:text-white mb-2']">
                   {{ title }}
                 </DialogTitle>
 
-                <p class="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+                <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                   {{ message }}
                 </p>
               </div>
 
               <!-- Actions -->
-              <div class="px-6 pb-6 flex gap-3">
+              <div class="px-5 pb-5 flex gap-2">
                 <button
                   @click="handleClose"
-                  class="flex-1 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-6 py-3 text-base font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow"
+                  class="flex-1 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   @click="handleConfirm"
                   :class="[
-                    'flex-1 rounded-xl px-6 py-3 text-base font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl',
+                    'flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg',
                     variantClasses[variant].confirmButton,
                   ]"
                 >

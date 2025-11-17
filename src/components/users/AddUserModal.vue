@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-50" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"
@@ -31,9 +31,9 @@
             >
               <!-- Modal Header -->
               <div
-                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
+                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
               >
-                <DialogTitle class="text-xl font-semibold text-gray-900 dark:text-white">
+                <DialogTitle class="text-lg font-semibold text-gray-900 dark:text-white">
                   Add New User
                 </DialogTitle>
                 <button
@@ -57,11 +57,11 @@
               </div>
 
               <!-- Form -->
-              <form @submit.prevent="handleSubmit" class="px-6 py-4">
-                <div class="space-y-4">
+              <form @submit.prevent="handleSubmit" class="px-5 py-3">
+                <div class="space-y-3">
                   <!-- Username -->
                   <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                       Username <span class="text-red-500">*</span>
                     </label>
                     <input
@@ -69,13 +69,13 @@
                       type="text"
                       placeholder="Enter username"
                       required
-                      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
+                      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
                     />
                   </div>
 
                   <!-- Password -->
                   <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                       Password <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
@@ -156,19 +156,19 @@
 
                   <!-- Name (Optional) -->
                   <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                       Name (Optional)
                     </label>
                     <input
                       v-model="formData.name"
                       type="text"
                       placeholder="Enter full name"
-                      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
+                      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
                     />
                   </div>
 
                   <!-- Require Password Change -->
-                  <div class="flex items-start gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                  <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
                     <input
                       id="requirePasswordChange"
                       v-model="formData.requirePasswordChange"
@@ -189,24 +189,24 @@
                   </div>
 
                   <!-- Error Message -->
-                  <div v-if="errorMessage" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
+                  <div v-if="errorMessage" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2">
                     <p class="text-sm text-red-800 dark:text-red-300">{{ errorMessage }}</p>
                   </div>
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
                     @click="handleClose"
-                    class="rounded-lg bg-gray-200 px-5 py-2.5 text-gray-900 font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow"
+                    class="rounded-lg bg-gray-200 px-4 py-2 text-sm text-gray-900 font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     :disabled="isSubmitting || !formData.username.trim() || !formData.password.trim() || formData.password.length < 8"
-                    class="rounded-lg bg-brand-500 px-5 py-2.5 text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                    class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200"
                   >
                     <span v-if="isSubmitting" class="flex items-center gap-2">
                       <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

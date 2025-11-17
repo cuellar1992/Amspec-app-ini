@@ -31,9 +31,9 @@
             >
               <!-- Modal Header -->
               <div
-                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
+                class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gradient-to-r from-brand-50 to-white dark:from-gray-800 dark:to-gray-800"
               >
-                <DialogTitle class="text-xl font-semibold text-gray-900 dark:text-white">
+                <DialogTitle class="text-lg font-semibold text-gray-900 dark:text-white">
                   Manage Samplers
                 </DialogTitle>
                 <button
@@ -47,12 +47,12 @@
               </div>
 
               <!-- Add New Sampler Form -->
-              <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
+              <div class="border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gray-50 dark:bg-gray-900/50">
                 <form @submit.prevent="handleAdd">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                     <!-- Name -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                         Name <span class="text-red-500">*</span>
                       </label>
                       <input
@@ -60,20 +60,20 @@
                         type="text"
                         placeholder="Enter sampler name"
                         required
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-brand-800 transition-all duration-200"
                       />
                     </div>
 
                     <!-- Email -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                         Email
                       </label>
                       <input
                         v-model="newSampler.email"
                         type="email"
                         placeholder="sampler@amspec.com"
-                        class="w-full rounded-lg border bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-3 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                        class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-2 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                         :class="newSampler.email && !isValidEmail(newSampler.email) ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'"
                       />
                       <p v-if="newSampler.email && !isValidEmail(newSampler.email)" class="mt-1 text-xs text-red-600 dark:text-red-400">Enter a valid email address</p>
@@ -81,7 +81,7 @@
 
                     <!-- Phone -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                         Phone
                       </label>
                       <input
@@ -89,7 +89,7 @@
                         type="tel"
                         placeholder="+61 400 000 000"
                         @input="onPhoneInput('new')"
-                        class="w-full rounded-lg border bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-3 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                        class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-2 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                         :class="newSampler.phone && !isValidAuPhone(newSampler.phone) ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'"
                       />
                       <p v-if="newSampler.phone && !isValidAuPhone(newSampler.phone)" class="mt-1 text-xs text-red-600 dark:text-red-400">Use format +61 000 000 000</p>
@@ -114,15 +114,15 @@
                   </div>
 
                   <!-- Restricted Days -->
-                  <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                       Restricted Days (days sampler cannot work)
                     </label>
                     <div class="flex flex-wrap gap-2">
                       <label
                         v-for="(day, index) in daysOfWeek"
                         :key="index"
-                        class="flex items-center px-4 py-2 rounded-lg border cursor-pointer transition-all duration-200"
+                        class="flex items-center px-3 py-1.5 text-sm rounded-lg border cursor-pointer transition-all duration-200"
                         :class="
                           isDayRestricted(newSampler.restrictedDays, index)
                             ? 'bg-red-500 border-red-500 text-white'
@@ -143,7 +143,7 @@
                   <button
                     type="submit"
                     :disabled="isAdding || !newSampler.name.trim()"
-                    class="w-full rounded-lg bg-brand-500 px-6 py-2.5 text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                    class="w-full rounded-lg bg-brand-500 px-4 py-2 text-sm text-white font-medium hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-all duration-200"
                   >
                     <span v-if="isAdding" class="flex items-center justify-center gap-2">
                       <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@
               </div>
 
               <!-- Samplers List -->
-              <div class="max-h-[500px] overflow-y-auto px-6 py-4 pb-6 flex-1">
+              <div class="max-h-[500px] overflow-y-auto px-5 py-3 pb-4 flex-1">
                 <div v-if="isLoading" class="text-center py-12">
                   <div
                     class="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-brand-500 border-r-transparent"
@@ -197,18 +197,18 @@
                   </p>
                 </div>
 
-                <TransitionGroup v-else name="list" tag="div" class="space-y-3">
+                <TransitionGroup v-else name="list" tag="div" class="space-y-2.5">
                   <div
                     v-for="(sampler, index) in samplers"
                     :key="sampler._id"
-                    class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200 hover:shadow-md"
+                    class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200"
                     :style="index === samplers.length - 1 ? 'margin-bottom: 1rem;' : ''"
                   >
                     <!-- Editing Mode -->
-                    <div v-if="editingId === sampler._id" class="space-y-4">
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div v-if="editingId === sampler._id" class="space-y-3">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                             Name *
                           </label>
                           <input
@@ -218,7 +218,7 @@
                           />
                         </div>
                         <div>
-                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                             Email
                           </label>
                           <input
@@ -230,7 +230,7 @@
                           <p v-if="editingData.email && !isValidEmail(editingData.email)" class="mt-1 text-xs text-red-600 dark:text-red-400">Enter a valid email address</p>
                         </div>
                         <div>
-                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                          <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                             Phone
                           </label>
                           <input
@@ -260,7 +260,7 @@
                       </div>
 
                       <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                           Restricted Days
                         </label>
                         <div class="flex flex-wrap gap-2">
