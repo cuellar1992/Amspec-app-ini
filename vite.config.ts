@@ -44,6 +44,12 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      external: [
+        // Externalizar imágenes que causan problemas en el build
+        // Usar string literals para evitar errores de TypeScript
+        './src/assets/images/grid-image/image-01.png',
+        './src/assets/images/grid-image/image-02.png'
+      ],
       output: {
         manualChunks: undefined,
       },
@@ -56,7 +62,7 @@ export default defineConfig({
     // Optimización para contenedores
     assetsInlineLimit: 4096,
   },
-  // Optimizaciones para contenedores
+  // Optimizaciones para contenedores Docker
   optimizeDeps: {
     include: ['vue', 'vue-router', 'axios'],
   },
