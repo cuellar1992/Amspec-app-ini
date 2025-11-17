@@ -441,6 +441,42 @@ If you encounter issues:
 4. Review this documentation
 5. Check the main project README
 
+## 🚨 Known Issues and Solutions
+
+### Docker Installation Issues
+- **Problem**: Docker not installed on Windows
+- **Solution**: Install Docker Desktop from https://www.docker.com/products/docker-desktop/
+- **Reference**: See `DOCKER_TROUBLESHOOTING.md` for detailed steps
+
+### Build Issues
+- **Problem**: `vite: not found` error
+- **Solution**: ✅ **Fixed** - Dockerfile updated to install all dependencies before build
+- **Problem**: TypeScript compilation errors
+- **Solution**: Run `npm run lint` locally, fix errors, then rebuild
+
+### Runtime Issues
+- **Problem**: Port conflicts (8080 already in use)
+- **Solution**: Change port in docker-compose.yml to 8081 or another available port
+- **Problem**: MongoDB connection timeout
+- **Solution**: Check IP whitelist in MongoDB Atlas, verify connection string
+
+### Environment Variables Issues
+- **Problem**: Missing JWT secrets
+- **Solution**: Run `./deploy.sh generate-secrets` to create secure secrets
+
+---
+
+## 📞 Support
+
+If you encounter issues:
+
+1. Check logs: `docker-compose logs -f`
+2. Verify configuration: `docker-compose config`
+3. Check health status: `curl http://localhost:8080/health`
+4. Review main project README
+5. Check `PRODUCTION_READINESS_REVIEW.md` for known issues
+6. **New**: Check `DOCKER_TROUBLESHOOTING.md` for detailed troubleshooting steps
+
 ---
 
 ## 📄 License
