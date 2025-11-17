@@ -643,6 +643,17 @@
         </template>
       </Modal>
     </div>
+
+    <!-- Delete Passkey Confirmation Modal -->
+    <ConfirmationModal
+      :isOpen="showDeletePasskeyConfirm"
+      title="Delete Passkey"
+      message="Are you sure you want to delete this passkey? This action cannot be undone."
+      variant="danger"
+      confirmText="Delete"
+      @confirm="confirmDeletePasskey"
+      @close="closeDeletePasskeyConfirm"
+    />
   </admin-layout>
 </template>
 
@@ -651,6 +662,7 @@ import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Modal from '@/components/profile/Modal.vue'
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import authService from '@/services/authService'
 import userService from '@/services/userService'
 import passkeyService from '@/services/passkeyService'
@@ -686,6 +698,8 @@ const isLoadingPasskeys = ref(false)
 const isPasskeySupported = ref(false)
 const showPasskeyModal = ref(false)
 const passkeyName = ref('')
+const showDeletePasskeyConfirm = ref(false)
+const passkeyToDelete = ref<string | null>(null)
 
 const user = ref<User | null>(authService.getCurrentUser())
 
@@ -734,6 +748,24 @@ watch(showDisableModal, async (newValue) => {
     await nextTick()
     // Enfocar el primer campo de código 2FA
     disable2FAInputRefs.value[0]?.focus()
+  }
+})
+
+// Auto-submit cuando el código de confirmación 2FA esté completo
+watch(isConfirm2FACodeComplete, async (isComplete) => {
+  if (isComplete && showQRCode.value && !isLoading.value) {
+    // Pequeño delay para que el usuario vea el último dígito
+    await nextTick()
+    handleConfirm2FA()
+  }
+})
+
+// Auto-submit cuando el código de deshabilitación 2FA esté completo
+watch(isDisable2FACodeComplete, async (isComplete) => {
+  if (isComplete && showDisableModal.value && !isLoading.value && disablePassword.value) {
+    // Pequeño delay para que el usuario vea el último dígito
+    await nextTick()
+    handleDisable2FA()
   }
 })
 
@@ -797,15 +829,18 @@ const handleRegisterPasskey = async () => {
   }
 }
 
-const handleDeletePasskey = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this passkey?')) {
-    return
-  }
+const handleDeletePasskey = (id: string) => {
+  passkeyToDelete.value = id
+  showDeletePasskeyConfirm.value = true
+}
+
+const confirmDeletePasskey = async () => {
+  if (!passkeyToDelete.value) return
 
   isLoadingPasskeys.value = true
 
   try {
-    await passkeyService.deletePasskey(id)
+    await passkeyService.deletePasskey(passkeyToDelete.value)
     toast.success('Passkey deleted successfully')
     await loadPasskeys()
   } catch (error: any) {
@@ -813,7 +848,13 @@ const handleDeletePasskey = async (id: string) => {
     toast.error(error.message || 'Failed to delete passkey')
   } finally {
     isLoadingPasskeys.value = false
+    passkeyToDelete.value = null
   }
+}
+
+const closeDeletePasskeyConfirm = () => {
+  showDeletePasskeyConfirm.value = false
+  passkeyToDelete.value = null
 }
 
 const formatPasskeyDate = (dateString: string | null): string => {

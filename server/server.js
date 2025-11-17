@@ -137,11 +137,8 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     app.use(
       cors({
         origin: (origin, callback) => {
-          console.log('🔍 CORS request from origin:', origin);
-
           // Permitir peticiones sin origin (ej: Postman, navegación directa, mismo servidor)
           if (!origin) {
-            console.log('✅ CORS permitido: Sin origin header (navegación directa)');
             return callback(null, true);
           }
 
@@ -149,7 +146,6 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
           if (process.env.NODE_ENV === 'production') {
             // Verificar si el origen está en la lista de permitidos
             if (allowedOrigins.includes(origin)) {
-              console.log('✅ CORS permitido:', origin);
               callback(null, true);
             } else {
               console.warn('🚫 CORS bloqueó origen:', origin);
@@ -159,7 +155,6 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
           } else {
             // En desarrollo, permitir todos los orígenes de desarrollo
             if (allowedOrigins.includes(origin)) {
-              console.log('✅ CORS permitido (dev):', origin);
               callback(null, true);
             } else {
               console.warn('🚫 CORS bloqueó origen en desarrollo:', origin);

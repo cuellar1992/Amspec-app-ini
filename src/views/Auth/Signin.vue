@@ -312,7 +312,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import FullScreenLayout from '@/components/layout/FullScreenLayout.vue'
 import authService, { type LoginResponseWithPasswordChange } from '@/services/authService'
@@ -370,6 +370,17 @@ const twoFactorCode = computed(() => {
 
 onMounted(() => {
   isPasskeySupported.value = passkeyService.isSupported()
+})
+
+// Auto-submit 2FA code when all 6 digits are entered
+watch(isTwoFactorCodeComplete, async (isComplete) => {
+  if (isComplete && requires2FA.value && !isLoading.value) {
+    // Small delay to allow the user to see the last digit and prevent double submit
+    await new Promise(resolve => setTimeout(resolve, 100))
+    if (!isLoading.value) {
+      handleSubmit()
+    }
+  }
 })
 
 const togglePasswordVisibility = () => {
@@ -458,18 +469,24 @@ const handleSubmit = async () => {
 
       if (response.success) {
         successMessage.value = 'Login successful'
-        
+
+        // Esperar un tick para que Vue actualice el estado reactivo
+        await nextTick()
+
         // Sincronizar información completa del usuario después del login 2FA
         try {
           await authService.getMe()
+          // Esperar otro tick después de obtener los datos del usuario
+          await nextTick()
         } catch (error) {
           console.warn('No se pudo sincronizar la información del usuario después del 2FA:', error)
         }
-        
+
+        // Pequeño delay para asegurar que todo está sincronizado
+        await new Promise(resolve => setTimeout(resolve, 300))
+
         // Redirect to dashboard
-        setTimeout(() => {
-          router.push('/')
-        }, 1000)
+        router.push('/')
       }
     } else {
       // Normal login

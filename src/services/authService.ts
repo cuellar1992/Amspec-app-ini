@@ -169,8 +169,17 @@ class AuthService {
 
       if (response.data.success && response.data.data?.tokens && response.data.data?.user) {
         const { tokens, user } = response.data.data;
+
+        if (import.meta.env.DEV) {
+          console.log('📝 Guardando usuario después de 2FA:', user);
+        }
+
         this.saveTokens(tokens.accessToken, tokens.refreshToken);
         this.saveUser(user);
+
+        if (import.meta.env.DEV) {
+          console.log('✅ Usuario guardado. Estado actual:', this.currentUserRef.value);
+        }
       }
 
       return response.data;
