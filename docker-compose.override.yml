@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      NODE_ENV: development
+      FRONTEND_URL: http://localhost:8080
+    volumes:
+      - ./server:/app/server
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./package.json:/app/package.json
+      - ./vite.config.ts:/app/vite.config.ts
+    command: ["npm", "run", "dev:full"]
+    ports:
+      - "5173:5173"  # Vite dev server
+      - "5000:5000"  # Backend dev server
