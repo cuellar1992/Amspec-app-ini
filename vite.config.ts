@@ -43,19 +43,8 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      external: [
-        // Externalizar imágenes que causan problemas en el build
-        // Usar string literals para evitar errores de TypeScript
-        './src/assets/images/grid-image/image-01.png',
-        './src/assets/images/grid-image/image-02.png'
-      ],
-      output: {
-        manualChunks: undefined,
-      },
-    },
     // Optimizaciones para producción
-    minify: 'terser',
+    minify: 'esbuild', // Usar esbuild (más rápido y viene incluido con Vite)
     sourcemap: false,
     // Aumentar el límite de advertencia de tamaño de chunk
     chunkSizeWarningLimit: 1000,
