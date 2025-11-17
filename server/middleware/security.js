@@ -6,10 +6,17 @@ export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      // Permitir scripts inline con hash específico o 'unsafe-inline' en producción
+      // Permitir estilos inline y de Google Fonts
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      // Permitir scripts inline (necesario para el script de GitHub Pages SPA en index.html)
       scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcElem: ["'self'", "'unsafe-inline'"],
+      // Permitir imágenes de cualquier origen HTTPS
       imgSrc: ["'self'", 'data:', 'https:'],
+      // Permitir fuentes de Google Fonts
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      // Permitir conexiones al backend y otros servicios
       connectSrc: ["'self'", process.env.FRONTEND_URL, process.env.BACKEND_URL].filter(Boolean),
     },
   },

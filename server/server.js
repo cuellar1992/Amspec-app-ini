@@ -99,8 +99,9 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     // Initialize Express app
     const app = express();
 
-    // Security middleware (aplicar en todos los entornos)
-    app.use(securityHeaders);
+    // Security middleware (solo aplicar a rutas API, no a archivos estáticos)
+    app.use('/api', securityHeaders);
+    app.use('/health', securityHeaders);
 
     // CORS configuration
     const allowedOrigins = [
@@ -267,9 +268,6 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
           } else if (filePath.endsWith('.ico')) {
             res.setHeader('Content-Type', 'image/x-icon');
           }
-
-          // Deshabilitar CSP para archivos estáticos
-          res.removeHeader('Content-Security-Policy');
         }
       }));
 
@@ -291,6 +289,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
         const indexPath = path.join(publicPath, 'index.html');
         console.log('📄 Serving index.html for route:', req.path);
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
         res.sendFile(indexPath, (err) => {
           if (err) {
             console.error('❌ Error serving index.html:', err);
