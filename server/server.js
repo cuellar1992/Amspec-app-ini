@@ -99,8 +99,10 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     // Initialize Express app
     const app = express();
 
-    // Security middleware (debe ir primero)
-    app.use(securityHeaders);
+    // Security middleware (solo en desarrollo, en producción Helmet puede causar problemas con Vite)
+    if (process.env.NODE_ENV !== 'production') {
+      app.use(securityHeaders);
+    }
 
     // CORS configuration
     const allowedOrigins = [
@@ -230,14 +232,12 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       }));
 
       // Manejar rutas de SPA (Single Page Application)
-      // Todas las rutas que no sean /api/* ni /health ni /assets/* deben servir index.html
-      app.get('*', (req, res) => {
-        // Si la ruta comienza con /api, /health, o /assets, no hacer nada (ya manejado arriba)
-        if (req.path.startsWith('/api') || req.path === '/health' || req.path.startsWith('/assets')) {
-          return res.status(404).json({
-            success: false,
-            message: 'API endpoint not found',
-          });
+      // Servir index.html para todas las rutas que no sean /api/* o /health
+      // express.static ya maneja /assets/* automáticamente
+      app.get('*', (req, res, next) => {
+        // Si la ruta comienza con /api o es /health, pasar al siguiente handler (404)
+        if (req.path.startsWith('/api') || req.path === '/health') {
+          return next();
         }
 
         // Servir index.html para todas las demás rutas (SPA routing)
