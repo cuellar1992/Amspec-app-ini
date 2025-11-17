@@ -1,38 +1,26 @@
 name: amspec-app-v2
 
-static_sites:
-  - name: amspec-frontend
-    source_dir: /
-    github:
-      repo: cuellar1992/AmSpec-App
-      branch: main
-      deploy_on_push: true
-    build_command: npm install && npm run build
-    output_dir: dist
-    index_document: index.html
-    error_document: index.html
-    routes:
-      - path: /
-    envs:
-      - key: NODE_VERSION
-        value: "18"
-      - key: VITE_API_URL
-        value: ${amspec-backend.PUBLIC_URL}/api
-
 services:
   - name: amspec-backend
-    source_dir: /server
     github:
-      repo: cuellar1992/AmSpec-App
+      repo: cuellar1992/Amspec-app-ini
       branch: main
       deploy_on_push: true
-    run_command: npm start
+    # Build command: construir frontend y copiarlo a server/public
+    build_command: |
+      npm install
+      npm run build
+      rm -rf server/public
+      cp -r dist server/public
+      cd server
+      npm install
+    run_command: cd server && npm start
     environment_slug: node-js
     instance_count: 1
     instance_size_slug: basic-xxs
     http_port: 8080
     routes:
-      - path: /api
+      - path: /
     envs:
       - key: NODE_VERSION
         value: "18"
@@ -46,5 +34,3 @@ services:
         value: ${JWT_SECRET}
       - key: JWT_REFRESH_SECRET
         value: ${JWT_REFRESH_SECRET}
-      - key: FRONTEND_URL
-        value: ${amspec-frontend.PUBLIC_URL}
