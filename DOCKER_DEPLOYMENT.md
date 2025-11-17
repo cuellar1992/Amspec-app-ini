@@ -334,6 +334,79 @@ services:
 
 ---
 
+## 🌊 Digital Ocean Deployment
+
+### 1. Configure Environment Variables in Digital Ocean
+
+In your Digital Ocean App Platform, go to **Settings > App-Level Environment Variables** and add:
+
+```bash
+# Backend Variables (Runtime)
+NODE_ENV=production
+PORT=8080
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/amspec-db?retryWrites=true&w=majority
+JWT_SECRET=<generate-64-char-random-string>
+JWT_REFRESH_SECRET=<generate-64-char-random-string>
+FRONTEND_URL=https://your-app-name.ondigitalocean.app
+
+# Frontend Variables (Build Time)
+VITE_API_URL=/api
+```
+
+**Note**: `VITE_API_URL=/api` uses a relative path since frontend and backend are served from the same domain in production.
+
+**Generate secure JWT secrets locally:**
+```bash
+# JWT_SECRET
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+# JWT_REFRESH_SECRET
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+### 2. MongoDB Setup
+
+**Option A: MongoDB Atlas (Recommended)**
+1. Create a cluster at https://cloud.mongodb.com
+2. Get your connection string
+3. Add Digital Ocean IPs to the IP whitelist (or allow all: `0.0.0.0/0`)
+4. Set `MONGODB_URI` in Digital Ocean
+
+**Option B: Digital Ocean Managed MongoDB**
+1. Create a MongoDB database in Digital Ocean
+2. Copy the connection string
+3. Set `MONGODB_URI` in Digital Ocean
+
+### 3. CORS Configuration
+
+The `FRONTEND_URL` variable is **critical** for CORS to work. Set it to your Digital Ocean app URL:
+```bash
+FRONTEND_URL=https://your-app-name.ondigitalocean.app
+```
+
+Without this, you'll see errors like:
+```json
+{
+  "success": false,
+  "message": "Something went wrong!",
+  "error": {}
+}
+```
+
+### 4. Health Check Configuration
+
+Digital Ocean will ping `/health` to verify your app is running. This is already configured in the server.
+
+### 5. Deployment
+
+After setting environment variables:
+1. Push your code to GitHub
+2. Digital Ocean will automatically rebuild
+3. Check logs for any errors
+4. Visit your app URL
+
+---
+
 ## 🚀 Production Deployment
 
 ### 1. Server Requirements

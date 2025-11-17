@@ -206,6 +206,30 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     app.use('/api/samplers', authenticate, samplerRoutes);
     app.use('/api/events', authenticate, eventRoutes);
 
+    // Serve static files from frontend build (producción)
+    if (process.env.NODE_ENV === 'production') {
+      const publicPath = path.join(__dirname, 'public');
+
+      // Servir archivos estáticos
+      app.use(express.static(publicPath));
+
+      // Manejar rutas de SPA (Single Page Application)
+      // Todas las rutas que no sean /api/* deben servir index.html
+      app.get('*', (req, res, next) => {
+        // Si la ruta es una API, pasar al siguiente middleware
+        if (req.path.startsWith('/api')) {
+          return next();
+        }
+        // Servir index.html para todas las demás rutas (SPA routing)
+        res.sendFile(path.join(publicPath, 'index.html'), (err) => {
+          if (err) {
+            console.error('Error serving index.html:', err);
+            res.status(500).send('Error loading application');
+          }
+        });
+      });
+    }
+
     // Error handling middleware
     app.use((err, req, res, _next) => { // eslint-disable-line @typescript-eslint/no-unused-vars
       // Log completo para desarrollo, mensaje simple para producción
