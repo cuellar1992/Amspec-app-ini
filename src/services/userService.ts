@@ -50,6 +50,7 @@ export interface CreateUserData {
   password: string;
   name?: string;
   role?: string;
+  requirePasswordChange?: boolean;
 }
 
 class UserService {

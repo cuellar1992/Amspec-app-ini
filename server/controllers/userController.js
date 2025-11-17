@@ -162,7 +162,7 @@ export const getAllUsers = async (req, res) => {
 // @access  Private (Admin only)
 export const createUser = async (req, res) => {
   try {
-    const { username, password, name, role } = req.body;
+    const { username, password, name, role, requirePasswordChange } = req.body;
 
     // Validaciones
     if (!username || !password) {
@@ -191,14 +191,15 @@ export const createUser = async (req, res) => {
     // Crear nuevo usuario
     // Si no se proporciona rol o está vacío, asignar 'admin' por defecto
     const userRole = role && role.trim() !== '' ? role : 'admin';
-    
+
     const newUser = new User({
       email: username.toLowerCase(),
       password,
       name: name || username,
       role: userRole,
       isActive: true,
-      requirePasswordChange: true, // Requerir cambio de contraseña en primer login
+      // Si no se especifica requirePasswordChange, por defecto es true
+      requirePasswordChange: requirePasswordChange !== undefined ? requirePasswordChange : true,
     });
 
     await newUser.save();

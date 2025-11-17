@@ -167,6 +167,26 @@
                     />
                   </div>
 
+                  <!-- Require Password Change -->
+                  <div class="flex items-start gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                    <input
+                      id="requirePasswordChange"
+                      v-model="formData.requirePasswordChange"
+                      type="checkbox"
+                      class="mt-0.5 w-4 h-4 text-brand-500 bg-white border-gray-300 rounded focus:ring-brand-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-brand-600 transition-all cursor-pointer"
+                    />
+                    <div class="flex-1">
+                      <label
+                        for="requirePasswordChange"
+                        class="text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
+                      >
+                        Require password change on first login
+                      </label>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        User will be prompted to change their password when they first sign in
+                      </p>
+                    </div>
+                  </div>
 
                   <!-- Error Message -->
                   <div v-if="errorMessage" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
@@ -236,6 +256,7 @@ const formData = ref({
   username: '',
   password: '',
   name: '',
+  requirePasswordChange: true, // Por defecto habilitado
 })
 
 const isSubmitting = ref(false)
@@ -251,6 +272,7 @@ watch(
         username: '',
         password: '',
         name: '',
+        requirePasswordChange: true,
       }
       errorMessage.value = ''
       showPassword.value = false
@@ -354,6 +376,7 @@ const handleSubmit = async () => {
       username: formData.value.username.trim(),
       password: formData.value.password,
       name: formData.value.name.trim() || undefined,
+      requirePasswordChange: formData.value.requirePasswordChange,
     })
 
     toast.success('User created successfully')

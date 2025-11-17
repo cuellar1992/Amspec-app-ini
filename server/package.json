@@ -16,7 +16,8 @@
     "create:admin": "node scripts/createInitialAdmin.js",
     "create:user": "node scripts/createUser.js",
     "create:agents": "node scripts/createAgents.js",
-    "create:master": "node scripts/createMasterData.js"
+    "create:master": "node scripts/createMasterData.js",
+    "set:superadmin": "node scripts/setSuperAdmin.js"
   },
   "keywords": [
     "express",
