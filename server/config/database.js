@@ -20,7 +20,6 @@ const connectDB = async (retries = 5, delay = 5000) => {
       retryWrites: true,
       w: 'majority',
       bufferCommands: false, // Deshabilitar buffering para contenedores
-      bufferMaxEntries: 0, // Deshabilitar buffering para contenedores
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
