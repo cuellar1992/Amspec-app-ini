@@ -122,7 +122,9 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
               console.warn('⚠️  Advertencia: FRONTEND_URL no configurada en producción');
               return callback(new Error('FRONTEND_URL debe estar configurada en producción'));
             }
-            if (origin === process.env.FRONTEND_URL) {
+            // Permitir peticiones sin origin (navegación directa del navegador)
+            // O peticiones del mismo origen (FRONTEND_URL)
+            if (!origin || origin === process.env.FRONTEND_URL) {
               callback(null, true);
             } else {
               console.warn('🚫 CORS bloqueó origen:', origin);

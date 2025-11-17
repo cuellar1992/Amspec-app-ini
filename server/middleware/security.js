@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 
 // Configuración de Helmet para seguridad HTTP
 export const securityHeaders = helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? false : {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
