@@ -159,7 +159,7 @@
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import dropdownService from '@/services/dropdownService'
@@ -168,6 +168,12 @@ import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import { listOtherJobs, createOtherJob, updateOtherJob, deleteOtherJob, type OtherJob, type OtherJobData } from '@/services/otherJobsService'
 import ViewOtherJobModal from '@/components/operations/ViewOtherJobModal.vue'
 import SingleSelect from '@/components/forms/FormElements/SingleSelect.vue'
+import { useOtherJobsStore } from '@/stores/otherJobs'
+import { useAutoSocket } from '@/composables/useSocket'
+
+const toast = useToast()
+const jobsStore = useOtherJobsStore()
+const socket = useAutoSocket()
 
 const jobDescription = ref('')
 const submittedOnce = ref(false)
@@ -313,6 +319,9 @@ const loadRows = async () => {
     rows.value = res.data
     totalItems.value = res.total ?? res.count ?? 0
     totalPages.value = res.pages ?? Math.ceil((res.total ?? 0) / rowsPerPage.value)
+
+    // Update store with fetched data
+    jobsStore.setJobs(res.data)
   }
 }
 
@@ -384,6 +393,46 @@ const confirmDelete = async () => {
 
 onMounted(async () => {
   await loadRows()
+
+  // WebSocket event listeners
+  socket.on('other-job:created', (job: OtherJob) => {
+    jobsStore.addJob(job)
+    // Add to current view if on first page
+    if (currentPage.value === 1) {
+      rows.value.unshift(job)
+      if (rows.value.length > rowsPerPage.value) {
+        rows.value.pop()
+      }
+      totalItems.value++
+    }
+    toast.success(`New job created: ${job.description.substring(0, 30)}...`)
+  })
+
+  socket.on('other-job:updated', (job: OtherJob) => {
+    jobsStore.updateJob(job)
+    const index = rows.value.findIndex(row => row._id === job._id)
+    if (index !== -1) {
+      rows.value[index] = job
+    }
+    toast.info(`Job updated: ${job.description.substring(0, 30)}...`)
+  })
+
+  socket.on('other-job:deleted', (data: { id: string }) => {
+    jobsStore.removeJob(data.id)
+    const index = rows.value.findIndex(row => row._id === data.id)
+    if (index !== -1) {
+      rows.value.splice(index, 1)
+      totalItems.value--
+    }
+    toast.info('Job deleted')
+  })
+})
+
+onUnmounted(() => {
+  // Cleanup WebSocket listeners
+  socket.off('other-job:created')
+  socket.off('other-job:updated')
+  socket.off('other-job:deleted')
 })
 
 // View modal

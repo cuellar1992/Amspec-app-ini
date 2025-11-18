@@ -1,4 +1,5 @@
 import MolekulisLoading from '../models/MolekulisLoading.js';
+import { emitToAll } from '../socket/index.js';
 
 // List with pagination and sorting (default startAt desc)
 export const listMolekulisLoadings = async (req, res) => {
@@ -43,6 +44,10 @@ export const createMolekulisLoading = async (req, res) => {
     }
     const item = await MolekulisLoading.create(payload);
     console.log('[ML][api] create: success id=', item?._id)
+
+    // Emit WebSocket event
+    emitToAll('molekulis-loading:created', item);
+
     res.status(201).json({ success: true, message: 'Loading created', data: item });
   } catch (error) {
     console.error('[ML][api] create: error', error)
@@ -63,6 +68,10 @@ export const updateMolekulisLoading = async (req, res) => {
     await item.save();
 
     console.log('[ML][api] update: success id=', item?._id)
+
+    // Emit WebSocket event
+    emitToAll('molekulis-loading:updated', item);
+
     res.status(200).json({ success: true, message: 'Loading updated', data: item });
   } catch (error) {
     console.error('[ML][api] update: error', error)
@@ -74,6 +83,10 @@ export const deleteMolekulisLoading = async (req, res) => {
   try {
     const item = await MolekulisLoading.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ success: false, message: 'Loading not found' });
+
+    // Emit WebSocket event
+    emitToAll('molekulis-loading:deleted', { id: req.params.id });
+
     res.status(200).json({ success: true, message: 'Loading deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error deleting loading', error: error.message });

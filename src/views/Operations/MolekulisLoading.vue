@@ -189,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import { useToast } from 'vue-toastification'
@@ -201,8 +201,12 @@ import ComponentCard from '@/components/common/ComponentCard.vue'
 import ViewMolekulisLoadingModal from '@/components/operations/ViewMolekulisLoadingModal.vue'
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import SingleSelect from '@/components/forms/FormElements/SingleSelect.vue'
+import { useMolekulisLoadingStore } from '@/stores/molekulisLoading'
+import { useAutoSocket } from '@/composables/useSocket'
 
 const toast = useToast()
+const loadingStore = useMolekulisLoadingStore()
+const socket = useAutoSocket()
 
 // Build payload at submit time; legacy form removed
 
@@ -400,6 +404,9 @@ const loadItems = async () => {
       items.value = res.data
       totalItems.value = res.total ?? res.count ?? 0
       totalPages.value = res.pages ?? Math.ceil((res.total ?? 0) / effectiveLimit)
+
+      // Update store with fetched data
+      loadingStore.setLoadings(res.data)
     }
   } catch {
     // noop
@@ -418,6 +425,46 @@ onMounted(async () => {
     samplerOptions.value = samplersResponse.data.map((s: { name: string }) => s.name)
   }
   await loadItems()
+
+  // WebSocket event listeners
+  socket.on('molekulis-loading:created', (loading: MolekulisLoading) => {
+    loadingStore.addLoading(loading)
+    // Add to current view if on first page
+    if (currentPage.value === 1) {
+      items.value.unshift(loading)
+      if (items.value.length > rowsPerPage.value) {
+        items.value.pop()
+      }
+      totalItems.value++
+    }
+    toast.success(`New loading created for ${loading.who}`)
+  })
+
+  socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
+    loadingStore.updateLoading(loading)
+    const index = items.value.findIndex(item => item._id === loading._id)
+    if (index !== -1) {
+      items.value[index] = loading
+    }
+    toast.info(`Loading updated: ${loading.who}`)
+  })
+
+  socket.on('molekulis-loading:deleted', (data: { id: string }) => {
+    loadingStore.removeLoading(data.id)
+    const index = items.value.findIndex(item => item._id === data.id)
+    if (index !== -1) {
+      items.value.splice(index, 1)
+      totalItems.value--
+    }
+    toast.info('Loading deleted')
+  })
+})
+
+onUnmounted(() => {
+  // Cleanup WebSocket listeners
+  socket.off('molekulis-loading:created')
+  socket.off('molekulis-loading:updated')
+  socket.off('molekulis-loading:deleted')
 })
 
 // Cancel edit handler

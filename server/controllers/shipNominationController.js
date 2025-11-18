@@ -1,4 +1,5 @@
 import ShipNomination from '../models/ShipNomination.js';
+import { emitToAll } from '../socket/index.js';
 
 // @desc    Get all ship nominations
 // @route   GET /api/ship-nominations
@@ -117,6 +118,9 @@ export const createShipNomination = async (req, res) => {
   try {
     const nomination = await ShipNomination.create(req.body);
 
+    // Emit WebSocket event
+    emitToAll('ship-nomination:created', nomination);
+
     res.status(201).json({
       success: true,
       message: 'Ship nomination created successfully',
@@ -170,6 +174,9 @@ export const updateShipNomination = async (req, res) => {
       });
     }
 
+    // Emit WebSocket event
+    emitToAll('ship-nomination:updated', nomination);
+
     res.status(200).json({
       success: true,
       message: 'Ship nomination updated successfully',
@@ -206,6 +213,9 @@ export const deleteShipNomination = async (req, res) => {
         message: 'Ship nomination not found',
       });
     }
+
+    // Emit WebSocket event
+    emitToAll('ship-nomination:deleted', { id: req.params.id });
 
     res.status(200).json({
       success: true,

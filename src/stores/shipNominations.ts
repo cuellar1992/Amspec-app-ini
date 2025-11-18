@@ -187,6 +187,42 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
     }
   }
 
+  const updateShipInStore = (ship: ShipNomination) => {
+    // Update in main list
+    const index = shipNominations.value.findIndex(s => s._id === ship._id)
+    if (index !== -1) {
+      shipNominations.value[index] = ship
+    }
+
+    // Update in recent list
+    const recentIndex = recentShipNominations.value.findIndex(s => s._id === ship._id)
+    if (recentIndex !== -1) {
+      recentShipNominations.value[recentIndex] = ship
+    }
+
+    // Invalidate cache
+    if (ship.amspecReference) {
+      delete shipNominationCache.value[ship.amspecReference]
+    }
+  }
+
+  const removeShip = (id: string) => {
+    shipNominations.value = shipNominations.value.filter(s => s._id !== id)
+    recentShipNominations.value = recentShipNominations.value.filter(s => s._id !== id)
+
+    // Clear any cache entries for this ship
+    Object.keys(shipNominationCache.value).forEach(key => {
+      if (shipNominationCache.value[key].data._id === id) {
+        delete shipNominationCache.value[key]
+      }
+    })
+  }
+
+  const setRecentShipNominations = (ships: ShipNomination[]) => {
+    recentShipNominations.value = ships
+    lastFetchTime.value = Date.now()
+  }
+
   const clearCache = () => {
     shipNominations.value = []
     recentShipNominations.value = []
@@ -214,6 +250,9 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
     getShipByReferenceCached,
     updateShip,
     addShip,
+    updateShipInStore,
+    removeShip,
+    setRecentShipNominations,
     clearCache,
     invalidateCacheForReference
   }

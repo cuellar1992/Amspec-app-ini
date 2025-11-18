@@ -574,6 +574,8 @@ import { useDebounce } from '@/composables/useDebounce'
 import { useAutoSocket } from '@/composables/useSocket'
 import { useDropdownsStore } from '@/stores/dropdowns'
 import { useShipNominationsStore } from '@/stores/shipNominations'
+import { useMolekulisLoadingStore } from '@/stores/molekulisLoading'
+import { useOtherJobsStore } from '@/stores/otherJobs'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
@@ -585,12 +587,15 @@ import type { Terminal } from '@/services/dropdownService'
 import { autogenerateLineSampling, getSamplingRosterByRef, createSamplingRoster, updateSamplingRoster, upsertSamplingRoster, type SamplingRosterData as SamplingRosterDataService } from '@/services/samplingRosterService'
 import type { MolekulisLoading } from '@/services/molekulisLoadingService'
 import type { OtherJob } from '@/services/otherJobsService'
+import { detectSamplerConflicts, formatConflictMessage } from '@/utils/samplerConflicts'
 
 const toast = useToast()
 
 // Pinia stores
 const dropdownsStore = useDropdownsStore()
 const shipsStore = useShipNominationsStore()
+const molekulisStore = useMolekulisLoadingStore()
+const otherJobsStore = useOtherJobsStore()
 
 // WebSocket connection for real-time updates
 const socket = useAutoSocket()
@@ -2723,6 +2728,10 @@ onMounted(async () => {
       // Update ship nominations store
       shipNominations.forEach(ship => shipsStore.addShip(ship))
 
+      // Update stores
+      molekulisStore.setLoadings(molekulisLoadings)
+      otherJobsStore.setJobs(otherJobs)
+
       // Update dropdowns store with manual data setting
       // (since batch returns different format than individual endpoints)
       dropdownsStore.surveyors = dropdowns.surveyors.map(name => ({ name, isActive: true }))
@@ -2769,6 +2778,70 @@ onMounted(async () => {
   socket.on('sampling-roster:created', (rosterData: any) => {
     console.log('🔔 New sampling roster created:', rosterData)
     toast.info(`New sampling roster: ${rosterData.vessel}`)
+  })
+
+  // Listen for Molekulis Loading events and check conflicts
+  socket.on('molekulis-loading:created', (loading: MolekulisLoading) => {
+    molekulisStore.addLoading(loading)
+    validationCache.value.molekulisData.push(loading)
+
+    // Check for sampler conflicts
+    const conflicts = detectSamplerConflicts(
+      molekulisStore.loadings,
+      otherJobsStore.jobs,
+      []
+    )
+
+    if (conflicts.length > 0) {
+      conflicts.forEach(conflict => {
+        toast.warning(formatConflictMessage(conflict), { timeout: 8000 })
+      })
+    }
+  })
+
+  socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
+    molekulisStore.updateLoading(loading)
+    const index = validationCache.value.molekulisData.findIndex(m => m._id === loading._id)
+    if (index !== -1) {
+      validationCache.value.molekulisData[index] = loading
+    }
+  })
+
+  socket.on('molekulis-loading:deleted', (data: { id: string }) => {
+    molekulisStore.removeLoading(data.id)
+    validationCache.value.molekulisData = validationCache.value.molekulisData.filter(m => m._id !== data.id)
+  })
+
+  // Listen for Other Job events and check conflicts
+  socket.on('other-job:created', (job: OtherJob) => {
+    otherJobsStore.addJob(job)
+    validationCache.value.otherJobsData.push(job)
+
+    // Check for sampler conflicts
+    const conflicts = detectSamplerConflicts(
+      molekulisStore.loadings,
+      otherJobsStore.jobs,
+      []
+    )
+
+    if (conflicts.length > 0) {
+      conflicts.forEach(conflict => {
+        toast.warning(formatConflictMessage(conflict), { timeout: 8000 })
+      })
+    }
+  })
+
+  socket.on('other-job:updated', (job: OtherJob) => {
+    otherJobsStore.updateJob(job)
+    const index = validationCache.value.otherJobsData.findIndex(o => o._id === job._id)
+    if (index !== -1) {
+      validationCache.value.otherJobsData[index] = job
+    }
+  })
+
+  socket.on('other-job:deleted', (data: { id: string }) => {
+    otherJobsStore.removeJob(data.id)
+    validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(o => o._id !== data.id)
   })
 })
 </script>

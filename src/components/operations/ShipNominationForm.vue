@@ -790,7 +790,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import MultipleSelect from '@/components/forms/FormElements/MultipleSelect.vue'
 import SingleSelect from '@/components/forms/FormElements/SingleSelect.vue'
 import Button from '@/components/ui/Button.vue'
@@ -806,6 +806,12 @@ import ManageTerminalModal from './ManageTerminalModal.vue'
 import ViewNominationModal from './ViewNominationModal.vue'
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import { useToast } from 'vue-toastification'
+import { useShipNominationsStore } from '@/stores/shipNominations'
+import { useAutoSocket } from '@/composables/useSocket'
+
+const toast = useToast()
+const shipsStore = useShipNominationsStore()
+const socket = useAutoSocket()
 
 // Form data
 const formData = ref({
@@ -1170,6 +1176,9 @@ const loadNominations = async () => {
       nominations.value = response.data
       totalItems.value = response.total ?? response.count ?? response.data.length
       totalPages.value = response.pages ?? Math.ceil((response.total ?? response.data.length) / rowsPerPage.value)
+
+      // Update store with recent nominations
+      shipsStore.setRecentShipNominations(response.data)
     }
   } catch (error) {
     console.error('Error loading nominations:', error)
@@ -1245,6 +1254,46 @@ onMounted(() => {
       showFilterDropdown.value = false
     }
   })
+
+  // WebSocket event listeners
+  socket.on('ship-nomination:created', (nomination: ShipNomination) => {
+    shipsStore.addShip(nomination)
+    // Add to current view if on first page
+    if (currentPage.value === 1) {
+      nominations.value.unshift(nomination)
+      if (nominations.value.length > rowsPerPage.value) {
+        nominations.value.pop()
+      }
+      totalItems.value++
+    }
+    toast.success(`New ship nomination: ${nomination.vesselName}`)
+  })
+
+  socket.on('ship-nomination:updated', (nomination: ShipNomination) => {
+    shipsStore.updateShipInStore(nomination)
+    const index = nominations.value.findIndex(n => n._id === nomination._id)
+    if (index !== -1) {
+      nominations.value[index] = nomination
+    }
+    toast.info(`Ship nomination updated: ${nomination.vesselName}`)
+  })
+
+  socket.on('ship-nomination:deleted', (data: { id: string }) => {
+    shipsStore.removeShip(data.id)
+    const index = nominations.value.findIndex(n => n._id === data.id)
+    if (index !== -1) {
+      nominations.value.splice(index, 1)
+      totalItems.value--
+    }
+    toast.info('Ship nomination deleted')
+  })
+})
+
+onUnmounted(() => {
+  // Cleanup WebSocket listeners
+  socket.off('ship-nomination:created')
+  socket.off('ship-nomination:updated')
+  socket.off('ship-nomination:deleted')
 })
 
 // Flatpickr configuration for date + time (24 hour format)
@@ -1272,9 +1321,6 @@ const etcDateTimeConfig = computed(() => ({
   minDate: formData.value.etb || undefined,
   onChange: handleEtcChange,
 }))
-
-// Initialize toast
-const toast = useToast()
 
 // Loading state
 const isSubmitting = ref(false)

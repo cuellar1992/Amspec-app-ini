@@ -1,4 +1,5 @@
 import OtherJob from '../models/OtherJob.js';
+import { emitToAll } from '../socket/index.js';
 
 export const listOtherJobs = async (req, res) => {
   try {
@@ -34,6 +35,10 @@ export const createOtherJob = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
     const item = await OtherJob.create(payload);
+
+    // Emit WebSocket event
+    emitToAll('other-job:created', item);
+
     res.status(201).json({ success: true, message: 'Other job created', data: item });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating other job', error: error.message });
@@ -51,6 +56,9 @@ export const updateOtherJob = async (req, res) => {
     // Save to trigger pre-save hook (which recalculates status)
     await item.save();
 
+    // Emit WebSocket event
+    emitToAll('other-job:updated', item);
+
     res.status(200).json({ success: true, message: 'Other job updated', data: item });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating other job', error: error.message });
@@ -61,6 +69,10 @@ export const deleteOtherJob = async (req, res) => {
   try {
     const item = await OtherJob.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ success: false, message: 'Other job not found' });
+
+    // Emit WebSocket event
+    emitToAll('other-job:deleted', { id: req.params.id });
+
     res.status(200).json({ success: true, message: 'Other job deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error deleting other job', error: error.message });

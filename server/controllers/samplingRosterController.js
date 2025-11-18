@@ -1,4 +1,5 @@
 import SamplingRoster from '../models/SamplingRoster.js';
+import { emitToAll } from '../socket/index.js';
 
 const toDate = (value) => {
   if (!value) return value;
@@ -198,6 +199,9 @@ export const createSamplingRoster = async (req, res) => {
   try {
     const roster = await SamplingRoster.create(req.body);
 
+    // Emit WebSocket event
+    emitToAll('sampling-roster:created', roster);
+
     res.status(201).json({
       success: true,
       data: roster,
@@ -235,6 +239,9 @@ export const updateSamplingRoster = async (req, res) => {
 
     // Save to trigger pre-save hook (which recalculates status)
     await roster.save();
+
+    // Emit WebSocket event
+    emitToAll('sampling-roster:updated', roster);
 
     res.status(200).json({
       success: true,
@@ -278,6 +285,9 @@ export const upsertSamplingRoster = async (req, res) => {
       }
     );
 
+    // Emit WebSocket event (created or updated)
+    emitToAll(existing ? 'sampling-roster:updated' : 'sampling-roster:created', roster);
+
     return res.status(existing ? 200 : 201).json({
       success: true,
       data: roster,
@@ -311,6 +321,9 @@ export const deleteSamplingRoster = async (req, res) => {
         message: 'Sampling roster not found',
       });
     }
+
+    // Emit WebSocket event
+    emitToAll('sampling-roster:deleted', { id: req.params.id });
 
     res.status(200).json({
       success: true,
