@@ -799,6 +799,7 @@ import 'flatpickr/dist/flatpickr.css'
 import { X } from 'lucide-vue-next'
 import { createShipNomination, getAllShipNominations, updateShipNomination, deleteShipNomination, checkAmspecReference, type ShipNominationData, type ShipNomination } from '@/services/shipNominationService'
 import dropdownService, { type Terminal } from '@/services/dropdownService'
+import { getSamplingRosterByRef, updateSamplingRoster } from '@/services/samplingRosterService'
 import ManageDropdownModal from './ManageDropdownModal.vue'
 import ManageSamplerModal from './ManageSamplerModal.vue'
 import ManageTerminalModal from './ManageTerminalModal.vue'
@@ -843,8 +844,45 @@ const formatAmspecReference = (event: Event) => {
   formData.value.amspecReference = value
 }
 
+// Sync with Sampling Roster when updating Ship Nomination
+const syncWithSamplingRoster = async (field: 'pilotOnBoard' | 'etb' | 'etc') => {
+  if (!formData.value.amspecReference) return
+
+  try {
+    // Get the sampling roster by AmSpec reference
+    const samplingRoster = await getSamplingRosterByRef(formData.value.amspecReference)
+
+    if (!samplingRoster.success || !samplingRoster.data) {
+      // No sampling roster found for this ship nomination yet
+      return
+    }
+
+    // Prepare update data
+    const updateData: any = {}
+
+    // Map the field to the corresponding sampling roster field
+    switch (field) {
+      case 'pilotOnBoard':
+        updateData.pob = formData.value.pilotOnBoard
+        break
+      case 'etb':
+        updateData.etb = formData.value.etb
+        break
+      case 'etc':
+        updateData.etc = formData.value.etc
+        break
+    }
+
+    // Update the sampling roster
+    await updateSamplingRoster(samplingRoster.data._id, updateData)
+  } catch (error) {
+    // Silent fail - sampling roster might not exist yet
+    console.log(`Sampling roster not found for ${formData.value.amspecReference}`)
+  }
+}
+
 // Handle Pilot on Board change and auto-calculate ETB (Pilot on Board + 2 hours)
-const handlePilotOnBoardChange = (selectedDates: Date[]) => {
+const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
   if (selectedDates && selectedDates.length > 0) {
     const pilotDate = new Date(selectedDates[0])
 
@@ -867,11 +905,15 @@ const handlePilotOnBoardChange = (selectedDates: Date[]) => {
         formData.value.etc = ''
       }
     }
+
+    // Sync Pilot on Board and ETB with Sampling Roster
+    await syncWithSamplingRoster('pilotOnBoard')
+    await syncWithSamplingRoster('etb')
   }
 }
 
 // Handle ETB change to validate against ETC
-const handleEtbChange = (selectedDates: Date[]) => {
+const handleEtbChange = async (selectedDates: Date[]) => {
   if (selectedDates && selectedDates.length > 0) {
     const etbDate = new Date(selectedDates[0])
 
@@ -892,6 +934,17 @@ const handleEtbChange = (selectedDates: Date[]) => {
         formData.value.etc = ''
       }
     }
+
+    // Sync ETB with Sampling Roster
+    await syncWithSamplingRoster('etb')
+  }
+}
+
+// Handle ETC change to sync with Sampling Roster
+const handleEtcChange = async (selectedDates: Date[]) => {
+  if (selectedDates && selectedDates.length > 0) {
+    // Sync ETC with Sampling Roster
+    await syncWithSamplingRoster('etc')
   }
 }
 
@@ -1217,6 +1270,7 @@ const etbDateTimeConfig = computed(() => ({
 const etcDateTimeConfig = computed(() => ({
   ...dateTimeConfig,
   minDate: formData.value.etb || undefined,
+  onChange: handleEtcChange,
 }))
 
 // Initialize toast

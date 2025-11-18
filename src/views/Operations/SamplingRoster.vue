@@ -2180,6 +2180,11 @@ const handleEtbChange = async (selectedDates: Date[]) => {
 
     // Sync ETB with Ship Nomination
     await syncWithShipNomination('etb')
+
+    // Sync recalculated ETC with Ship Nomination (if it was recalculated)
+    if (formData.value.etc) {
+      await syncWithShipNomination('etc')
+    }
   }
 }
 
@@ -2206,6 +2211,11 @@ const handleStartDischargeChange = async (selectedDates: Date[]) => {
 
     // Sync Start Discharge with Ship Nomination
     await syncWithShipNomination('startDischarge')
+
+    // Sync recalculated ETC with Ship Nomination (if it was recalculated)
+    if (formData.value.etc) {
+      await syncWithShipNomination('etc')
+    }
   }
 }
 
@@ -2228,6 +2238,11 @@ const handleEtcChange = async (selectedDates: Date[]) => {
     // Auto-save the changes
     if (hasLineSamplingGenerated.value && formData.value.etc) {
       await autoSave()
+    }
+
+    // Sync ETC with Ship Nomination
+    if (formData.value.etc) {
+      await syncWithShipNomination('etc')
     }
   }
 }
