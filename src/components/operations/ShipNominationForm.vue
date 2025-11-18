@@ -355,11 +355,8 @@
         </span>
         <span v-else>{{ isEditing ? 'Update Nomination' : 'Submit Nomination' }}</span>
       </Button>
-      <Button type="button" variant="outline" size="md" @click="handleReset">
-        Reset
-      </Button>
-      <Button v-if="isEditing" type="button" variant="outline" size="md" @click="handleReset">
-        Cancel Edit
+      <Button type="button" variant="outline" size="md" @click="cancelEdit">
+        {{ isEditing ? 'Cancel Edit' : 'Reset' }}
       </Button>
     </div>
   </form>
@@ -800,7 +797,6 @@ import 'flatpickr/dist/flatpickr.css'
 import { X } from 'lucide-vue-next'
 import { createShipNomination, getAllShipNominations, updateShipNomination, deleteShipNomination, checkAmspecReference, type ShipNominationData, type ShipNomination } from '@/services/shipNominationService'
 import dropdownService, { type Terminal } from '@/services/dropdownService'
-import { getSamplingRosterByRef, updateSamplingRoster } from '@/services/samplingRosterService'
 import ManageDropdownModal from './ManageDropdownModal.vue'
 import ManageSamplerModal from './ManageSamplerModal.vue'
 import ManageTerminalModal from './ManageTerminalModal.vue'
@@ -851,50 +847,17 @@ const formatAmspecReference = (event: Event) => {
   formData.value.amspecReference = value
 }
 
-// Sync with Sampling Roster when updating Ship Nomination
-const syncWithSamplingRoster = async (field: 'pilotOnBoard' | 'etb' | 'etc') => {
-  // Only sync if:
-  // 1. We're editing an existing nomination (not creating a new one)
-  // 2. We're not currently loading form data (to prevent sync during initial load)
-  if (!formData.value.amspecReference || !isEditing.value || isLoadingFormData.value) return
-
-  try {
-    // Get the sampling roster by AmSpec reference
-    const samplingRoster = await getSamplingRosterByRef(formData.value.amspecReference)
-
-    if (!samplingRoster.success || !samplingRoster.data) {
-      // No sampling roster found for this ship nomination yet
-      return
-    }
-
-    // Prepare update data
-    const updateData: any = {}
-
-    // Map the field to the corresponding sampling roster field
-    switch (field) {
-      case 'pilotOnBoard':
-        updateData.pob = formData.value.pilotOnBoard
-        break
-      case 'etb':
-        updateData.etb = formData.value.etb
-        break
-      case 'etc':
-        updateData.etc = formData.value.etc
-        break
-    }
-
-    // Update the sampling roster
-    await updateSamplingRoster(samplingRoster.data._id, updateData)
-  } catch (error) {
-    // Silent fail - sampling roster might not exist yet
-    console.log(`Sampling roster not found for ${formData.value.amspecReference}`)
-  }
-}
+// ⚠️ SYNC REMOVED: Synchronization is now UNIDIRECTIONAL only
+// Sampling Roster → Ship Nomination (only)
+// Ship Nomination changes DO NOT sync back to Sampling Roster
+// This prevents 404 errors when no roster exists and simplifies the flow
 
 // Handle Pilot on Board change and auto-calculate ETB (Pilot on Board + 2 hours)
 const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
-  // Skip if we're loading form data (prevents sync during initial load)
-  if (isLoadingFormData.value) return
+  // Skip if we're loading form data
+  if (isLoadingFormData.value) {
+    return
+  }
 
   if (selectedDates && selectedDates.length > 0) {
     const pilotDate = new Date(selectedDates[0])
@@ -909,7 +872,8 @@ const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
     const hours = String(etbDate.getHours()).padStart(2, '0')
     const minutes = String(etbDate.getMinutes()).padStart(2, '0')
 
-    formData.value.etb = `${year}-${month}-${day} ${hours}:${minutes}`
+    const newETB = `${year}-${month}-${day} ${hours}:${minutes}`
+    formData.value.etb = newETB
 
     // If ETC is set and is now before the new ETB, clear it
     if (formData.value.etc) {
@@ -918,19 +882,16 @@ const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
         formData.value.etc = ''
       }
     }
-
-    // Sync Pilot on Board and ETB with Sampling Roster (only if editing)
-    if (isEditing.value) {
-      await syncWithSamplingRoster('pilotOnBoard')
-      await syncWithSamplingRoster('etb')
-    }
+    // No sync - changes only saved when user submits the form
   }
 }
 
 // Handle ETB change to validate against ETC
 const handleEtbChange = async (selectedDates: Date[]) => {
-  // Skip if we're loading form data (prevents sync during initial load)
-  if (isLoadingFormData.value) return
+  // Skip if we're loading form data
+  if (isLoadingFormData.value) {
+    return
+  }
 
   if (selectedDates && selectedDates.length > 0) {
     const etbDate = new Date(selectedDates[0])
@@ -942,8 +903,8 @@ const handleEtbChange = async (selectedDates: Date[]) => {
     const hours = String(etbDate.getHours()).padStart(2, '0')
     const minutes = String(etbDate.getMinutes()).padStart(2, '0')
 
-    // Update formData.value.etb to ensure Vue reactivity
-    formData.value.etb = `${year}-${month}-${day} ${hours}:${minutes}`
+    const newETB = `${year}-${month}-${day} ${hours}:${minutes}`
+    formData.value.etb = newETB
 
     // If ETC is set and is now before the new ETB, clear it
     if (formData.value.etc) {
@@ -952,25 +913,19 @@ const handleEtbChange = async (selectedDates: Date[]) => {
         formData.value.etc = ''
       }
     }
-
-    // Sync ETB with Sampling Roster (only if editing)
-    if (isEditing.value) {
-      await syncWithSamplingRoster('etb')
-    }
+    // No sync - changes only saved when user submits the form
   }
 }
 
-// Handle ETC change to sync with Sampling Roster
+// Handle ETC change
 const handleEtcChange = async (selectedDates: Date[]) => {
-  // Skip if we're loading form data (prevents sync during initial load)
-  if (isLoadingFormData.value) return
-
-  if (selectedDates && selectedDates.length > 0) {
-    // Sync ETC with Sampling Roster (only if editing)
-    if (isEditing.value) {
-      await syncWithSamplingRoster('etc')
-    }
+  // Skip if we're loading form data
+  if (isLoadingFormData.value) {
+    return
   }
+
+  // No sync needed - changes only saved when user submits the form
+  // ETC is updated automatically by v-model binding
 }
 
 const validateAmspecReference = async () => {
@@ -1289,6 +1244,11 @@ onMounted(() => {
   })
 
   socket.on('ship-nomination:updated', (nomination: ShipNomination) => {
+    // If we're editing this nomination, DO NOT UPDATE to prevent overwriting user changes
+    if (isEditing.value && selectedNomination.value?._id === nomination._id) {
+      return // Block the update to protect user's unsaved changes
+    }
+
     // Store is already updated by central notification handler
     // Update local view
     const index = nominations.value.findIndex(n => n._id === nomination._id)
@@ -1404,8 +1364,8 @@ const handleSubmit = async () => {
       toast.success(`Ship Nomination ${action} successfully! Reference: ${response.data?.amspecReference}`)
 
       // Reset form after successful submission
-      handleReset()
-      
+      cancelEdit()
+
       // Reload nominations to show the changes
       loadNominations()
     } else {
@@ -1431,7 +1391,8 @@ const handleSubmit = async () => {
   }
 }
 
-const handleReset = () => {
+const cancelEdit = () => {
+  // Reset form data
   formData.value = {
     vesselName: '',
     amspecReference: '',
