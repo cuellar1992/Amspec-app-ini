@@ -74,7 +74,7 @@ export const useDropdownsStore = defineStore('dropdowns', () => {
         dropdownService.getSurveyors(true),
         dropdownService.getSamplers(true),
         dropdownService.getTerminals(true),
-        dropdownService.getProducts(true),
+        dropdownService.getProductTypes(true),
         dropdownService.getAgents(true),
         dropdownService.getClients(true)
       ])

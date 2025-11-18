@@ -426,9 +426,9 @@ onMounted(async () => {
   }
   await loadItems()
 
-  // WebSocket event listeners
+  // WebSocket event listeners (notifications handled centrally in useSocketNotifications)
   socket.on('molekulis-loading:created', (loading: MolekulisLoading) => {
-    loadingStore.addLoading(loading)
+    // Store is already updated by central notification handler
     // Add to current view if on first page
     if (currentPage.value === 1) {
       items.value.unshift(loading)
@@ -437,26 +437,23 @@ onMounted(async () => {
       }
       totalItems.value++
     }
-    toast.success(`New loading created for ${loading.who}`)
   })
 
   socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
-    loadingStore.updateLoading(loading)
+    // Store is already updated by central notification handler
     const index = items.value.findIndex(item => item._id === loading._id)
     if (index !== -1) {
       items.value[index] = loading
     }
-    toast.info(`Loading updated: ${loading.who}`)
   })
 
   socket.on('molekulis-loading:deleted', (data: { id: string }) => {
-    loadingStore.removeLoading(data.id)
+    // Store is already updated by central notification handler
     const index = items.value.findIndex(item => item._id === data.id)
     if (index !== -1) {
       items.value.splice(index, 1)
       totalItems.value--
     }
-    toast.info('Loading deleted')
   })
 })
 

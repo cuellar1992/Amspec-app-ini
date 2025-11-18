@@ -114,12 +114,14 @@ export function useGlobalSocket() {
   return globalSocket
 }
 
-// Auto-connect composable
+// Auto-connect composable (waits for auth)
 export function useAutoSocket() {
   const socketInstance = useGlobalSocket()
 
   onMounted(() => {
-    if (!socketInstance.connected.value && !socketInstance.connecting.value) {
+    // Check if we have a valid access token before connecting
+    const token = localStorage.getItem('accessToken')
+    if (token && !socketInstance.connected.value && !socketInstance.connecting.value) {
       socketInstance.connect()
     }
   })

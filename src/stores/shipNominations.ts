@@ -22,6 +22,18 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
     [key: string]: { data: ShipNomination; timestamp: number }
   }>({})
 
+  // Helper function to remove duplicates from array
+  const removeDuplicates = (ships: ShipNomination[]): ShipNomination[] => {
+    const seen = new Set<string>()
+    return ships.filter(ship => {
+      if (seen.has(ship._id)) {
+        return false
+      }
+      seen.add(ship._id)
+      return true
+    })
+  }
+
   // Getters
   const getByReference = computed(() => {
     return (amspecRef: string) => {
@@ -41,6 +53,8 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
 
     // Check if cache is still valid
     if (!forceRefresh && recentShipNominations.value.length > 0 && (now - lastFetchTime.value) < CACHE_DURATION) {
+      // Remove duplicates before returning
+      recentShipNominations.value = removeDuplicates(recentShipNominations.value)
       return recentShipNominations.value
     }
 
@@ -54,16 +68,19 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
       })
 
       if (response.success && response.data) {
-        recentShipNominations.value = response.data
+        // Remove duplicates from response
+        const uniqueData = removeDuplicates(response.data)
+        recentShipNominations.value = uniqueData
+
         // Also add to full list if not already there
-        response.data.forEach(ship => {
+        uniqueData.forEach(ship => {
           const exists = shipNominations.value.find(s => s._id === ship._id)
           if (!exists) {
             shipNominations.value.push(ship)
           }
         })
         lastFetchTime.value = now
-        return response.data
+        return uniqueData
       }
     } catch (error) {
       console.error('Error fetching recent ship nominations:', error)
@@ -81,6 +98,9 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
       const response = await searchShipNominations(searchTerm, limit)
 
       if (response.success && response.data) {
+        // Update recent list with search results (remove duplicates)
+        recentShipNominations.value = response.data
+
         // Add to full list if not already there
         response.data.forEach(ship => {
           const exists = shipNominations.value.find(s => s._id === ship._id)
@@ -180,7 +200,8 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
       shipNominations.value.unshift(ship)
       recentShipNominations.value.unshift(ship)
 
-      // Keep recent list limited
+      // Remove duplicates and keep recent list limited
+      recentShipNominations.value = removeDuplicates(recentShipNominations.value)
       if (recentShipNominations.value.length > 10) {
         recentShipNominations.value = recentShipNominations.value.slice(0, 10)
       }
@@ -219,7 +240,11 @@ export const useShipNominationsStore = defineStore('shipNominations', () => {
   }
 
   const setRecentShipNominations = (ships: ShipNomination[]) => {
-    recentShipNominations.value = ships
+    recentShipNominations.value = removeDuplicates(ships)
+
+    // Also clean up shipNominations list to prevent duplicates
+    shipNominations.value = removeDuplicates(shipNominations.value)
+
     lastFetchTime.value = Date.now()
   }
 

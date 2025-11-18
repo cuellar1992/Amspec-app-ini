@@ -566,7 +566,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import { useToast } from 'vue-toastification'
@@ -1811,14 +1811,12 @@ const handleAutoGenerate = async () => {
     let requiresLineSampling = true // Default to true
     if (formData.value.terminal) {
       try {
-        const terminalsResponse = await dropdownService.getTerminals()
-        if (terminalsResponse.success && terminalsResponse.data) {
-          const selectedTerminal = (terminalsResponse.data as Terminal[]).find(
-            (t: Terminal) => t.name === formData.value.terminal
-          )
-          if (selectedTerminal) {
-            requiresLineSampling = selectedTerminal.requiresLineSampling
-          }
+        await dropdownsStore.fetchAllDropdowns()
+        const selectedTerminal = dropdownsStore.terminals.find(
+          (t: Terminal) => t.name === formData.value.terminal
+        )
+        if (selectedTerminal) {
+          requiresLineSampling = selectedTerminal.requiresLineSampling
         }
       } catch (error) {
         console.error('Error fetching terminal info:', error)
@@ -2759,30 +2757,26 @@ onMounted(async () => {
     ])
   }
 
-  // Setup WebSocket listeners for real-time updates
+  // Setup WebSocket listeners for real-time updates (notifications handled centrally)
   socket.on('ship-nomination:created', (shipData: ShipNomination) => {
     console.log('🔔 New ship nomination created:', shipData)
-    shipsStore.addShip(shipData)
-    toast.success(`New ship nomination: ${shipData.vesselName}`)
+    // Store is already updated by central notification handler
   })
 
   socket.on('ship-nomination:updated', (shipData: ShipNomination) => {
     console.log('🔔 Ship nomination updated:', shipData)
+    // Store is already updated by central notification handler
     // Invalidate cache and reload if this is the current ship
     if (formData.value.amspecRef === shipData.amspecReference) {
       shipsStore.invalidateCacheForReference(shipData.amspecReference)
-      toast.info(`Ship nomination ${shipData.vesselName} was updated`)
     }
   })
 
-  socket.on('sampling-roster:created', (rosterData: any) => {
-    console.log('🔔 New sampling roster created:', rosterData)
-    toast.info(`New sampling roster: ${rosterData.vessel}`)
-  })
+  // Note: sampling-roster:created notification is handled centrally
 
-  // Listen for Molekulis Loading events and check conflicts
+  // Listen for Molekulis Loading events and check conflicts (notifications handled centrally)
   socket.on('molekulis-loading:created', (loading: MolekulisLoading) => {
-    molekulisStore.addLoading(loading)
+    // Store is already updated by central notification handler
     validationCache.value.molekulisData.push(loading)
 
     // Check for sampler conflicts
@@ -2800,7 +2794,7 @@ onMounted(async () => {
   })
 
   socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
-    molekulisStore.updateLoading(loading)
+    // Store is already updated by central notification handler
     const index = validationCache.value.molekulisData.findIndex(m => m._id === loading._id)
     if (index !== -1) {
       validationCache.value.molekulisData[index] = loading
@@ -2808,13 +2802,13 @@ onMounted(async () => {
   })
 
   socket.on('molekulis-loading:deleted', (data: { id: string }) => {
-    molekulisStore.removeLoading(data.id)
+    // Store is already updated by central notification handler
     validationCache.value.molekulisData = validationCache.value.molekulisData.filter(m => m._id !== data.id)
   })
 
-  // Listen for Other Job events and check conflicts
+  // Listen for Other Job events and check conflicts (notifications handled centrally)
   socket.on('other-job:created', (job: OtherJob) => {
-    otherJobsStore.addJob(job)
+    // Store is already updated by central notification handler
     validationCache.value.otherJobsData.push(job)
 
     // Check for sampler conflicts
@@ -2832,7 +2826,7 @@ onMounted(async () => {
   })
 
   socket.on('other-job:updated', (job: OtherJob) => {
-    otherJobsStore.updateJob(job)
+    // Store is already updated by central notification handler
     const index = validationCache.value.otherJobsData.findIndex(o => o._id === job._id)
     if (index !== -1) {
       validationCache.value.otherJobsData[index] = job
@@ -2840,8 +2834,20 @@ onMounted(async () => {
   })
 
   socket.on('other-job:deleted', (data: { id: string }) => {
-    otherJobsStore.removeJob(data.id)
+    // Store is already updated by central notification handler
     validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(o => o._id !== data.id)
   })
+})
+
+onUnmounted(() => {
+  // Cleanup WebSocket listeners
+  socket.off('ship-nomination:created')
+  socket.off('ship-nomination:updated')
+  socket.off('molekulis-loading:created')
+  socket.off('molekulis-loading:updated')
+  socket.off('molekulis-loading:deleted')
+  socket.off('other-job:created')
+  socket.off('other-job:updated')
+  socket.off('other-job:deleted')
 })
 </script>

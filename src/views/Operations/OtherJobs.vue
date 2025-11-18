@@ -393,9 +393,9 @@ const confirmDelete = async () => {
 onMounted(async () => {
   await loadRows()
 
-  // WebSocket event listeners
+  // WebSocket event listeners (notifications handled centrally in useSocketNotifications)
   socket.on('other-job:created', (job: OtherJob) => {
-    jobsStore.addJob(job)
+    // Store is already updated by central notification handler
     // Add to current view if on first page
     if (currentPage.value === 1) {
       rows.value.unshift(job)
@@ -404,26 +404,23 @@ onMounted(async () => {
       }
       totalItems.value++
     }
-    toast.success(`New job created: ${job.description.substring(0, 30)}...`)
   })
 
   socket.on('other-job:updated', (job: OtherJob) => {
-    jobsStore.updateJob(job)
+    // Store is already updated by central notification handler
     const index = rows.value.findIndex(row => row._id === job._id)
     if (index !== -1) {
       rows.value[index] = job
     }
-    toast.info(`Job updated: ${job.description.substring(0, 30)}...`)
   })
 
   socket.on('other-job:deleted', (data: { id: string }) => {
-    jobsStore.removeJob(data.id)
+    // Store is already updated by central notification handler
     const index = rows.value.findIndex(row => row._id === data.id)
     if (index !== -1) {
       rows.value.splice(index, 1)
       totalItems.value--
     }
-    toast.info('Job deleted')
   })
 })
 

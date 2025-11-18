@@ -203,6 +203,7 @@
             id="etc"
             v-model="formData.etc"
             :config="etcDateTimeConfig"
+            @on-change="handleEtcChange"
             class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-800"
             placeholder="Select date and time"
           />
@@ -852,7 +853,10 @@ const formatAmspecReference = (event: Event) => {
 
 // Sync with Sampling Roster when updating Ship Nomination
 const syncWithSamplingRoster = async (field: 'pilotOnBoard' | 'etb' | 'etc') => {
-  if (!formData.value.amspecReference) return
+  // Only sync if:
+  // 1. We're editing an existing nomination (not creating a new one)
+  // 2. We're not currently loading form data (to prevent sync during initial load)
+  if (!formData.value.amspecReference || !isEditing.value || isLoadingFormData.value) return
 
   try {
     // Get the sampling roster by AmSpec reference
@@ -889,6 +893,9 @@ const syncWithSamplingRoster = async (field: 'pilotOnBoard' | 'etb' | 'etc') => 
 
 // Handle Pilot on Board change and auto-calculate ETB (Pilot on Board + 2 hours)
 const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
+  // Skip if we're loading form data (prevents sync during initial load)
+  if (isLoadingFormData.value) return
+
   if (selectedDates && selectedDates.length > 0) {
     const pilotDate = new Date(selectedDates[0])
 
@@ -912,14 +919,19 @@ const handlePilotOnBoardChange = async (selectedDates: Date[]) => {
       }
     }
 
-    // Sync Pilot on Board and ETB with Sampling Roster
-    await syncWithSamplingRoster('pilotOnBoard')
-    await syncWithSamplingRoster('etb')
+    // Sync Pilot on Board and ETB with Sampling Roster (only if editing)
+    if (isEditing.value) {
+      await syncWithSamplingRoster('pilotOnBoard')
+      await syncWithSamplingRoster('etb')
+    }
   }
 }
 
 // Handle ETB change to validate against ETC
 const handleEtbChange = async (selectedDates: Date[]) => {
+  // Skip if we're loading form data (prevents sync during initial load)
+  if (isLoadingFormData.value) return
+
   if (selectedDates && selectedDates.length > 0) {
     const etbDate = new Date(selectedDates[0])
 
@@ -941,16 +953,23 @@ const handleEtbChange = async (selectedDates: Date[]) => {
       }
     }
 
-    // Sync ETB with Sampling Roster
-    await syncWithSamplingRoster('etb')
+    // Sync ETB with Sampling Roster (only if editing)
+    if (isEditing.value) {
+      await syncWithSamplingRoster('etb')
+    }
   }
 }
 
 // Handle ETC change to sync with Sampling Roster
 const handleEtcChange = async (selectedDates: Date[]) => {
+  // Skip if we're loading form data (prevents sync during initial load)
+  if (isLoadingFormData.value) return
+
   if (selectedDates && selectedDates.length > 0) {
-    // Sync ETC with Sampling Roster
-    await syncWithSamplingRoster('etc')
+    // Sync ETC with Sampling Roster (only if editing)
+    if (isEditing.value) {
+      await syncWithSamplingRoster('etc')
+    }
   }
 }
 
@@ -1255,9 +1274,10 @@ onMounted(() => {
     }
   })
 
-  // WebSocket event listeners
+  // WebSocket event listeners (notifications handled centrally in useSocketNotifications)
+  // Only update local state here
   socket.on('ship-nomination:created', (nomination: ShipNomination) => {
-    shipsStore.addShip(nomination)
+    // Store is already updated by central notification handler
     // Add to current view if on first page
     if (currentPage.value === 1) {
       nominations.value.unshift(nomination)
@@ -1266,26 +1286,25 @@ onMounted(() => {
       }
       totalItems.value++
     }
-    toast.success(`New ship nomination: ${nomination.vesselName}`)
   })
 
   socket.on('ship-nomination:updated', (nomination: ShipNomination) => {
-    shipsStore.updateShipInStore(nomination)
+    // Store is already updated by central notification handler
+    // Update local view
     const index = nominations.value.findIndex(n => n._id === nomination._id)
     if (index !== -1) {
       nominations.value[index] = nomination
     }
-    toast.info(`Ship nomination updated: ${nomination.vesselName}`)
   })
 
   socket.on('ship-nomination:deleted', (data: { id: string }) => {
-    shipsStore.removeShip(data.id)
+    // Store is already updated by central notification handler
+    // Update local view
     const index = nominations.value.findIndex(n => n._id === data.id)
     if (index !== -1) {
       nominations.value.splice(index, 1)
       totalItems.value--
     }
-    toast.info('Ship nomination deleted')
   })
 })
 
@@ -1319,7 +1338,6 @@ const etbDateTimeConfig = computed(() => ({
 const etcDateTimeConfig = computed(() => ({
   ...dateTimeConfig,
   minDate: formData.value.etb || undefined,
-  onChange: handleEtcChange,
 }))
 
 // Loading state
@@ -1332,6 +1350,7 @@ const showViewModal = ref(false)
 const showDeleteConfirm = ref(false)
 const selectedNomination = ref<ShipNomination | null>(null)
 const isEditing = ref(false)
+const isLoadingFormData = ref(false) // Flag to prevent sync during form data loading
 
 // Form handlers
 const handleSubmit = async () => {
@@ -1429,9 +1448,10 @@ const handleReset = () => {
     sampler: '',
     chemist: '',
   }
-  
+
   // Reset edit state
   isEditing.value = false
+  isLoadingFormData.value = false
   selectedNomination.value = null
 }
 
@@ -1490,6 +1510,7 @@ const viewNomination = (nomination: ShipNomination) => {
 // Edit nomination - load data into form
 const editNomination = (nomination: ShipNomination) => {
   isEditing.value = true
+  isLoadingFormData.value = true // Prevent sync during data loading
   selectedNomination.value = nomination
   originalRefWhenEditing.value = nomination.amspecReference
 
@@ -1514,6 +1535,11 @@ const editNomination = (nomination: ShipNomination) => {
   formData.value.surveyor = nomination.surveyor || ''
   formData.value.sampler = nomination.sampler || ''
   formData.value.chemist = nomination.chemist || ''
+
+  // Allow sync after a short delay to ensure all form fields are loaded
+  setTimeout(() => {
+    isLoadingFormData.value = false
+  }, 500)
 
   // Scroll to form
   window.scrollTo({ top: 0, behavior: 'smooth' })

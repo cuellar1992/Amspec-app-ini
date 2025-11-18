@@ -22,15 +22,29 @@ import { useRouter } from 'vue-router'
 import ThemeProvider from './components/layout/ThemeProvider.vue'
 import SidebarProvider from './components/layout/SidebarProvider.vue'
 import { useAuthValidation } from './composables/useAuthValidation'
+import { useSocketNotifications } from './composables/useSocketNotifications'
+import { useGlobalSocket } from './composables/useSocket'
 
 const router = useRouter()
+const socket = useGlobalSocket()
 
 // ⭐ Usar el composable de validación de sesión
 const { isValidating, isSessionValid, validateSession } = useAuthValidation()
 
+// ⭐ Configurar listeners de notificaciones de WebSocket centralizados
+// Esto previene notificaciones duplicadas al manejarlas en un solo lugar
+useSocketNotifications()
+
 // ⭐ Validar sesión al montar la aplicación
 onMounted(async () => {
   await validateSession()
+})
+
+// ⭐ Conectar WebSocket solo después de validar sesión exitosamente
+watch(isSessionValid, (isValid) => {
+  if (isValid && !socket.connected.value && !socket.connecting.value) {
+    socket.connect()
+  }
 })
 
 // ⭐ Redirigir automáticamente cuando cambie el estado de validación
