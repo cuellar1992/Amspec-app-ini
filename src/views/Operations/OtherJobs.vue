@@ -248,7 +248,6 @@ onMounted(async () => {
 })
 
 // Save/Reset
-const toast = useToast()
 const isSubmitting = ref(false)
 
 const validateBeforeSubmit = () => {
