@@ -1,5 +1,7 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import os from 'os';
@@ -8,6 +10,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import { securityHeaders, apiLimiter } from './middleware/security.js';
 import { authenticate } from './middleware/auth.js';
+import { initializeSocket } from './socket/index.js';
 import authRoutes from './routes/auth.js';
 import passkeyRoutes from './routes/passkey.js';
 import userRoutes from './routes/users.js';
@@ -19,6 +22,7 @@ import dropdownRoutes from './routes/dropdowns.js';
 import samplingRosterRoutes from './routes/samplingRosters.js';
 import eventRoutes from './routes/events.js';
 import samplerRoutes from './routes/samplers.js';
+import batchRoutes from './routes/batch.js';
 import ShipNomination from './models/ShipNomination.js';
 import OtherJob from './models/OtherJob.js';
 import MolekulisLoading from './models/MolekulisLoading.js';
@@ -166,6 +170,17 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       })
     );
 
+    // Compression middleware - compress all responses
+    app.use(compression({
+      filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+          return false;
+        }
+        return compression.filter(req, res);
+      },
+      threshold: 1024, // Only compress responses > 1KB
+    }));
+
     // Body parser middleware
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -229,6 +244,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
     app.use('/api/sampling-rosters', authenticate, samplingRosterRoutes);
     app.use('/api/samplers', authenticate, samplerRoutes);
     app.use('/api/events', authenticate, eventRoutes);
+    app.use('/api/batch', batchRoutes); // Batch endpoints already have authenticate middleware inside
 
     // Serve static files from frontend build (producción)
     if (process.env.NODE_ENV === 'production') {
@@ -321,11 +337,15 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
       });
     });
 
+    // Create HTTP server and initialize Socket.IO
+    const httpServer = createServer(app);
+    initializeSocket(httpServer);
+
     // Start server
     const PORT = process.env.PORT || 5000;
     const HOST = '0.0.0.0'; // Permite conexiones desde cualquier IP de la red
 
-    app.listen(PORT, HOST, () => {
+    httpServer.listen(PORT, HOST, () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`📍 Local: http://localhost:${PORT}`);
       console.log(`📍 Network: http://${getLocalIP()}:${PORT}`);

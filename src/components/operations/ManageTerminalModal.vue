@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleDialogClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"
@@ -398,9 +398,11 @@ const handleAdd = async () => {
     })
 
     if (response.success) {
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('terminals')
+      await loadTerminals()
       toast.success('Terminal added successfully')
       newTerminal.value = { name: '', berths: [], requiresLineSampling: false }
-      await loadTerminals()
       emit('updated')
     } else {
       toast.error(response.message || 'Failed to add terminal')
@@ -440,8 +442,10 @@ const handleUpdate = async (id: string) => {
     })
 
     if (response.success) {
-      toast.success('Terminal updated successfully')
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('terminals')
       await loadTerminals()
+      toast.success('Terminal updated successfully')
       cancelEdit()
       emit('updated')
     } else {
@@ -474,6 +478,8 @@ const toggleBerth = async (terminal: Terminal, berthName: string) => {
     })
 
     if (response.success) {
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('terminals')
       await loadTerminals()
       emit('updated')
 
@@ -506,6 +512,8 @@ const toggleLineSampling = async (terminal: Terminal) => {
     })
 
     if (response.success) {
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('terminals')
       await loadTerminals()
       emit('updated')
 
@@ -538,9 +546,15 @@ const confirmDelete = async () => {
     const response = await dropdownService.deleteTerminal(terminalToDelete.value)
 
     if (response.success) {
-      toast.success('Terminal deleted successfully')
+      // Invalidate cache before reloading to ensure fresh data
+      dropdownService.invalidateAllForType('terminals')
+      
+      // Reload terminals from server
       await loadTerminals()
+      
+      // Success - emit updated event and show success message
       emit('updated')
+      toast.success('Terminal deleted successfully')
     } else {
       toast.error(response.message || 'Failed to delete terminal')
     }
@@ -550,12 +564,26 @@ const confirmDelete = async () => {
   } finally {
     isDeletingId.value = null
     terminalToDelete.value = null
+    // Close confirmation modal after operation completes
+    showDeleteConfirm.value = false
   }
 }
 
 const closeDeleteConfirm = () => {
   showDeleteConfirm.value = false
-  terminalToDelete.value = null
+  // Reset terminal to delete if user cancels
+  if (!isDeletingId.value) {
+    terminalToDelete.value = null
+  }
+}
+
+// Handle dialog close (prevent closing during delete operation)
+const handleDialogClose = () => {
+  // Don't close if there's a delete operation in progress
+  if (isDeletingId.value || showDeleteConfirm.value) {
+    return
+  }
+  handleClose()
 }
 
 // Handle close

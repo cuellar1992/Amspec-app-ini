@@ -73,9 +73,12 @@ otherJobSchema.statics.updateAllStatuses = async function() {
   return jobs;
 };
 
+// Indexes for faster queries
 otherJobSchema.index({ createdAt: -1 });
 otherJobSchema.index({ when: -1 });
 otherJobSchema.index({ status: 1 });
+otherJobSchema.index({ startAt: 1 }); // For conflict checking and sorting
+otherJobSchema.index({ status: 1, when: -1 }); // Filter by status and sort by when
 
 const OtherJob = mongoose.model('OtherJob', otherJobSchema);
 

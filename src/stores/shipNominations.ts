@@ -1,0 +1,220 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import {
+  getAllShipNominations,
+  searchShipNominations,
+  checkAmspecReference,
+  updateShipNomination,
+  type ShipNomination,
+  type ShipNominationData
+} from '@/services/shipNominationService'
+
+export const useShipNominationsStore = defineStore('shipNominations', () => {
+  // State
+  const shipNominations = ref<ShipNomination[]>([])
+  const recentShipNominations = ref<ShipNomination[]>([])
+  const isLoading = ref(false)
+  const lastFetchTime = ref(0)
+  const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+  // Cache for individual ship nominations by reference
+  const shipNominationCache = ref<{
+    [key: string]: { data: ShipNomination; timestamp: number }
+  }>({})
+
+  // Getters
+  const getByReference = computed(() => {
+    return (amspecRef: string) => {
+      return shipNominations.value.find(s => s.amspecReference === amspecRef)
+    }
+  })
+
+  const getById = computed(() => {
+    return (id: string) => {
+      return shipNominations.value.find(s => s._id === id)
+    }
+  })
+
+  // Actions
+  const fetchRecentShipNominations = async (limit = 5, forceRefresh = false) => {
+    const now = Date.now()
+
+    // Check if cache is still valid
+    if (!forceRefresh && recentShipNominations.value.length > 0 && (now - lastFetchTime.value) < CACHE_DURATION) {
+      return recentShipNominations.value
+    }
+
+    isLoading.value = true
+
+    try {
+      const response = await getAllShipNominations({
+        limit,
+        sortBy: 'etb',
+        sortOrder: 'desc'
+      })
+
+      if (response.success && response.data) {
+        recentShipNominations.value = response.data
+        // Also add to full list if not already there
+        response.data.forEach(ship => {
+          const exists = shipNominations.value.find(s => s._id === ship._id)
+          if (!exists) {
+            shipNominations.value.push(ship)
+          }
+        })
+        lastFetchTime.value = now
+        return response.data
+      }
+    } catch (error) {
+      console.error('Error fetching recent ship nominations:', error)
+    } finally {
+      isLoading.value = false
+    }
+
+    return []
+  }
+
+  const searchShips = async (searchTerm: string, limit = 10) => {
+    isLoading.value = true
+
+    try {
+      const response = await searchShipNominations(searchTerm, limit)
+
+      if (response.success && response.data) {
+        // Add to full list if not already there
+        response.data.forEach(ship => {
+          const exists = shipNominations.value.find(s => s._id === ship._id)
+          if (!exists) {
+            shipNominations.value.push(ship)
+          }
+        })
+        return response.data
+      }
+    } catch (error) {
+      console.error('Error searching ship nominations:', error)
+    } finally {
+      isLoading.value = false
+    }
+
+    return []
+  }
+
+  const getShipByReferenceCached = async (amspecRef: string): Promise<ShipNomination | null> => {
+    const now = Date.now()
+    const cached = shipNominationCache.value[amspecRef]
+
+    // Check if we have a valid cached entry
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      return cached.data
+    }
+
+    // Check in store first
+    const inStore = getByReference.value(amspecRef)
+    if (inStore) {
+      // Update cache
+      shipNominationCache.value[amspecRef] = {
+        data: inStore,
+        timestamp: now
+      }
+      return inStore
+    }
+
+    // Fetch from API
+    try {
+      const response = await checkAmspecReference(amspecRef)
+      if (response.success && response.data) {
+        // Add to store
+        const exists = shipNominations.value.find(s => s._id === response.data!._id)
+        if (!exists) {
+          shipNominations.value.push(response.data)
+        }
+
+        // Update cache
+        shipNominationCache.value[amspecRef] = {
+          data: response.data,
+          timestamp: now
+        }
+        return response.data
+      }
+    } catch (error) {
+      console.error('Error fetching ship nomination by reference:', error)
+    }
+
+    return null
+  }
+
+  const updateShip = async (id: string, data: Partial<ShipNominationData>): Promise<ShipNomination | null> => {
+    try {
+      const response = await updateShipNomination(id, data)
+
+      if (response.success && response.data) {
+        // Update in store
+        const index = shipNominations.value.findIndex(s => s._id === id)
+        if (index !== -1) {
+          shipNominations.value[index] = response.data
+        }
+
+        // Update in recent list if exists
+        const recentIndex = recentShipNominations.value.findIndex(s => s._id === id)
+        if (recentIndex !== -1) {
+          recentShipNominations.value[recentIndex] = response.data
+        }
+
+        // Invalidate cache for this ship
+        const amspecRef = response.data.amspecReference
+        delete shipNominationCache.value[amspecRef]
+
+        return response.data
+      }
+    } catch (error) {
+      console.error('Error updating ship nomination:', error)
+      throw error
+    }
+
+    return null
+  }
+
+  const addShip = (ship: ShipNomination) => {
+    const exists = shipNominations.value.find(s => s._id === ship._id)
+    if (!exists) {
+      shipNominations.value.unshift(ship)
+      recentShipNominations.value.unshift(ship)
+
+      // Keep recent list limited
+      if (recentShipNominations.value.length > 10) {
+        recentShipNominations.value = recentShipNominations.value.slice(0, 10)
+      }
+    }
+  }
+
+  const clearCache = () => {
+    shipNominations.value = []
+    recentShipNominations.value = []
+    shipNominationCache.value = {}
+    lastFetchTime.value = 0
+  }
+
+  const invalidateCacheForReference = (amspecRef: string) => {
+    delete shipNominationCache.value[amspecRef]
+  }
+
+  return {
+    // State
+    shipNominations,
+    recentShipNominations,
+    isLoading,
+
+    // Getters
+    getByReference,
+    getById,
+
+    // Actions
+    fetchRecentShipNominations,
+    searchShips,
+    getShipByReferenceCached,
+    updateShip,
+    addShip,
+    clearCache,
+    invalidateCacheForReference
+  }
+})

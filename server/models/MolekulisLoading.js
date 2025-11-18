@@ -78,10 +78,12 @@ molekulisLoadingSchema.statics.updateAllStatuses = async function() {
   return loadings;
 };
 
-// Indexes
+// Indexes for faster queries
 molekulisLoadingSchema.index({ createdAt: -1 });
 molekulisLoadingSchema.index({ when: -1 });
 molekulisLoadingSchema.index({ status: 1 });
+molekulisLoadingSchema.index({ startAt: 1 }); // For conflict checking and sorting
+molekulisLoadingSchema.index({ status: 1, when: -1 }); // Filter by status and sort by when
 
 const MolekulisLoading = mongoose.model('MolekulisLoading', molekulisLoadingSchema);
 

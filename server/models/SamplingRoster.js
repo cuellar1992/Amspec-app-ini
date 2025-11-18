@@ -109,10 +109,12 @@ const calculateStatus = (startDischarge, dischargeTimeHours) => {
   return 'pending';
 };
 
-// Index for faster lookups
-samplingRosterSchema.index({ amspecRef: 1 });
+// Indexes for faster lookups
+samplingRosterSchema.index({ amspecRef: 1 }); // Primary lookup field
 samplingRosterSchema.index({ createdAt: -1 });
 samplingRosterSchema.index({ status: 1 });
+samplingRosterSchema.index({ etb: -1 }); // For sorting by ETB
+samplingRosterSchema.index({ status: 1, etb: -1 }); // Filter by status and sort by ETB
 
 // Pre-save hook to calculate hours and status
 samplingRosterSchema.pre('save', function(next) {

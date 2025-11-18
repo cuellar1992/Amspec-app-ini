@@ -570,47 +570,54 @@ import { ref, computed, onMounted, watch } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import { useToast } from 'vue-toastification'
+import { useDebounce } from '@/composables/useDebounce'
+import { useAutoSocket } from '@/composables/useSocket'
+import { useDropdownsStore } from '@/stores/dropdowns'
+import { useShipNominationsStore } from '@/stores/shipNominations'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import SamplerConflictModal from '@/components/ui/SamplerConflictModal.vue'
-import { getAllShipNominations, searchShipNominations, checkAmspecReference, updateShipNomination, type ShipNomination, type ShipNominationData } from '@/services/shipNominationService'
-import dropdownService, { type Terminal } from '@/services/dropdownService'
+import { searchShipNominations, type ShipNomination, type ShipNominationData } from '@/services/shipNominationService'
+import { getSamplingRosterInitData } from '@/services/batchService'
+import type { Terminal } from '@/services/dropdownService'
 import { autogenerateLineSampling, getSamplingRosterByRef, createSamplingRoster, updateSamplingRoster, upsertSamplingRoster, type SamplingRosterData as SamplingRosterDataService } from '@/services/samplingRosterService'
-import { listMolekulisLoadings, type MolekulisLoading } from '@/services/molekulisLoadingService'
-import { listOtherJobs, type OtherJob } from '@/services/otherJobsService'
+import type { MolekulisLoading } from '@/services/molekulisLoadingService'
+import type { OtherJob } from '@/services/otherJobsService'
 
 const toast = useToast()
+
+// Pinia stores
+const dropdownsStore = useDropdownsStore()
+const shipsStore = useShipNominationsStore()
+
+// WebSocket connection for real-time updates
+const socket = useAutoSocket()
+
+// Pending sync fields - to batch multiple sync calls
+const pendingSyncFields = ref<Set<'pob' | 'etb' | 'etc' | 'startDischarge'>>(new Set())
 
 // Ship Nomination Search
 const searchQuery = ref('')
 const showDropdown = ref(false)
-const isLoadingShips = ref(false)
-const shipNominations = ref<ShipNomination[]>([])
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-// Show filtered results (from loaded data)
+// Use ship nominations from store
+const shipNominations = computed(() => shipsStore.recentShipNominations)
+const isLoadingShips = computed(() => shipsStore.isLoading)
+
+// Show filtered results (from store)
 const filteredShipNominations = computed(() => {
   return shipNominations.value
 })
 
-// Load initial ship nominations (only last 5)
+// Load initial ship nominations (only last 5) - now using store
 const loadInitialShipNominations = async () => {
-  isLoadingShips.value = true
-  try {
-    const response = await getAllShipNominations({ limit: 5, sortBy: 'etb', sortOrder: 'desc' })
-    if (response.success && response.data) {
-      shipNominations.value = response.data
-    }
-  } catch (error) {
-    console.error('Error loading ship nominations:', error)
-  } finally {
-    isLoadingShips.value = false
-  }
+  await shipsStore.fetchRecentShipNominations(5)
 }
 
-// Search ship nominations with debounce
+// Search ship nominations with debounce - now using store
 const handleSearch = async () => {
   showDropdown.value = true
 
@@ -627,17 +634,11 @@ const handleSearch = async () => {
 
   // Debounce search: wait 500ms after user stops typing
   searchTimeout.value = setTimeout(async () => {
-    isLoadingShips.value = true
     try {
-      const response = await searchShipNominations(searchQuery.value, 20)
-      if (response.success && response.data) {
-        shipNominations.value = response.data
-      }
+      await shipsStore.searchShips(searchQuery.value, 20)
     } catch (error) {
       console.error('Error searching ship nominations:', error)
       toast.error('Error searching ship nominations')
-    } finally {
-      isLoadingShips.value = false
     }
   }, 500) // 500ms debounce
 }
@@ -692,19 +693,19 @@ const editingLineData = ref<{
   hours: ''
 })
 
-// Sampler options for dropdown
-const samplerOptions = ref<string[]>([])
-
-// Complete sampler data for validation (cached from API)
+// Complete sampler data interface for validation
 interface SamplerData {
-  _id: string
+  _id?: string
   name: string
   email?: string
   isActive: boolean
   has24HourRestriction?: boolean
   restrictedDays?: number[]
 }
-const samplersData = ref<SamplerData[]>([])
+
+// Use dropdowns from store
+const samplerOptions = computed(() => dropdownsStore.activeSamplers)
+const samplersData = computed(() => dropdownsStore.samplers as SamplerData[])
 
 // Format date/time for display (24 hour format)
 const formatDateTimeForTable = (dateString: string) => {
@@ -1202,7 +1203,7 @@ const validationCache = ref<ValidationCacheData>({
   molekulisData: null,
   otherJobsData: null,
   lastFetch: 0,
-  CACHE_DURATION: 5 * 60 * 1000 // 5 minutes cache
+  CACHE_DURATION: 15 * 60 * 1000 // 15 minutes cache - increased to reduce API calls
 })
 
 // Validate sampler restrictions for manual edits (same rules as autogenerate)
@@ -2247,43 +2248,71 @@ const handleEtcChange = async (selectedDates: Date[]) => {
   }
 }
 
-// Sync POB, ETB, ETC with Ship Nomination when changed in Sampling Roster
-const syncWithShipNomination = async (field: 'pob' | 'etb' | 'etc' | 'startDischarge') => {
-  if (!formData.value.amspecRef) return
+// Batch sync - collects multiple fields and syncs them in a single API call
+// Now using Pinia store for caching
+const batchSyncWithShipNomination = async () => {
+  if (!formData.value.amspecRef || pendingSyncFields.value.size === 0) return
 
   try {
-    // Get the ship nomination by reference first
-    const response = await checkAmspecReference(formData.value.amspecRef)
-    if (!response.success || !response.data) {
+    // Get the ship nomination from store (with caching)
+    const shipNomination = await shipsStore.getShipByReferenceCached(formData.value.amspecRef)
+    if (!shipNomination) {
       console.log('Ship nomination not found for reference:', formData.value.amspecRef)
       return
     }
 
-    // Prepare update data
+    // Prepare update data for all pending fields
     const updateData: Partial<ShipNominationData> = {}
 
-    // Map the field to the corresponding ship nomination field
-    switch (field) {
-      case 'pob':
-        updateData.pilotOnBoard = formData.value.pob
-        break
-      case 'etb':
-        updateData.etb = formData.value.etb
-        break
-      case 'etc':
-        updateData.etc = formData.value.etc
-        break
-      case 'startDischarge':
-        // Start Discharge is not stored in Ship Nomination, only in Sampling Roster
-        // So we don't sync this field
-        return
+    for (const field of pendingSyncFields.value) {
+      switch (field) {
+        case 'pob':
+          updateData.pilotOnBoard = formData.value.pob
+          break
+        case 'etb':
+          updateData.etb = formData.value.etb
+          break
+        case 'etc':
+          updateData.etc = formData.value.etc
+          break
+        case 'startDischarge':
+          // Start Discharge is not stored in Ship Nomination, only in Sampling Roster
+          break
+      }
     }
 
-    // Update the ship nomination
-    await updateShipNomination(response.data._id, updateData)
+    // Only update if we have data to sync
+    if (Object.keys(updateData).length > 0) {
+      // Use store's update method (handles cache invalidation)
+      await shipsStore.updateShip(shipNomination._id, updateData)
+
+      // Emit WebSocket event for real-time updates to other users
+      socket.emit('ship-nomination:update', {
+        id: shipNomination._id,
+        amspecReference: formData.value.amspecRef,
+        updates: updateData
+      })
+    }
+
+    // Clear pending fields
+    pendingSyncFields.value.clear()
   } catch (error) {
-    console.error(`Error syncing ${field} with Ship Nomination:`, error)
+    console.error('Error syncing with Ship Nomination:', error)
   }
+}
+
+// Debounced batch sync - waits 500ms before executing to batch multiple rapid changes
+const debouncedBatchSync = useDebounce(batchSyncWithShipNomination, 500)
+
+// Sync POB, ETB, ETC with Ship Nomination when changed in Sampling Roster
+const syncWithShipNomination = async (field: 'pob' | 'etb' | 'etc' | 'startDischarge') => {
+  if (!formData.value.amspecRef) return
+
+  // Add field to pending sync
+  pendingSyncFields.value.add(field)
+
+  // Trigger debounced batch sync
+  debouncedBatchSync()
 }
 
 // Status badge class
@@ -2363,8 +2392,8 @@ const dateTimeConfig = {
   locale: { firstDayOfWeek: 1 }
 }
 
-// Surveyor options (loaded from service)
-const surveyorOptions = ref<string[]>([])
+// Use surveyor options from store
+const surveyorOptions = computed(() => dropdownsStore.activeSurveyors)
 
 // Form submission
 const isSubmitting = ref(false)
@@ -2681,22 +2710,65 @@ const cancelEdit = () => {
   resetForm()
 }
 
-// Load ship nominations and surveyors on component mount
+// Load all initial data using batch API and Pinia stores
 onMounted(async () => {
-  // Load only last 5 ship nominations initially
-  await loadInitialShipNominations()
+  try {
+    // Use batch API to load all initialization data in a single request
+    const response = await getSamplingRosterInitData()
 
-  // Load surveyor options
-  const surveyorsResponse = await dropdownService.getSurveyors(true)
-  if (surveyorsResponse.success && surveyorsResponse.data) {
-    surveyorOptions.value = surveyorsResponse.data.map((s: { name: string }) => s.name)
+    if (response.success && response.data) {
+      // Populate stores with batch data
+      const { shipNominations, molekulisLoadings, otherJobs, dropdowns } = response.data
+
+      // Update ship nominations store
+      shipNominations.forEach(ship => shipsStore.addShip(ship))
+
+      // Update dropdowns store with manual data setting
+      // (since batch returns different format than individual endpoints)
+      dropdownsStore.surveyors = dropdowns.surveyors.map(name => ({ name, isActive: true }))
+      dropdownsStore.samplers = dropdowns.samplers.map(s => ({
+        name: s.name,
+        isActive: true,
+        has24HourRestriction: s.has24HourRestriction,
+        restrictedDays: s.restrictedDays
+      }))
+
+      // Update validation cache with molekulis and other jobs data
+      validationCache.value.molekulisData = molekulisLoadings
+      validationCache.value.otherJobsData = otherJobs
+      validationCache.value.lastFetch = Date.now()
+
+      console.log('✅ Loaded all initialization data using batch API')
+    }
+  } catch (error) {
+    console.error('❌ Error loading initialization data:', error)
+    // Fallback to individual calls if batch fails
+    console.log('Falling back to individual API calls...')
+    await Promise.all([
+      loadInitialShipNominations(),
+      dropdownsStore.fetchAllDropdowns()
+    ])
   }
 
-  // Load sampler options for Office Sampling dropdown (with full data for validation)
-  const samplersResponse = await dropdownService.getSamplers(true)
-  if (samplersResponse.success && samplersResponse.data) {
-    samplerOptions.value = samplersResponse.data.map((s: { name: string }) => s.name)
-    samplersData.value = samplersResponse.data as SamplerData[]
-  }
+  // Setup WebSocket listeners for real-time updates
+  socket.on('ship-nomination:created', (shipData: ShipNomination) => {
+    console.log('🔔 New ship nomination created:', shipData)
+    shipsStore.addShip(shipData)
+    toast.success(`New ship nomination: ${shipData.vesselName}`)
+  })
+
+  socket.on('ship-nomination:updated', (shipData: ShipNomination) => {
+    console.log('🔔 Ship nomination updated:', shipData)
+    // Invalidate cache and reload if this is the current ship
+    if (formData.value.amspecRef === shipData.amspecReference) {
+      shipsStore.invalidateCacheForReference(shipData.amspecReference)
+      toast.info(`Ship nomination ${shipData.vesselName} was updated`)
+    }
+  })
+
+  socket.on('sampling-roster:created', (rosterData: any) => {
+    console.log('🔔 New sampling roster created:', rosterData)
+    toast.info(`New sampling roster: ${rosterData.vessel}`)
+  })
 })
 </script>

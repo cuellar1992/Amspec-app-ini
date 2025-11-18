@@ -5,8 +5,8 @@
       <div v-if="isValidating" class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">
           <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
-          <h2 class="mt-6 text-xl font-semibold text-gray-700">Validando sesión...</h2>
-          <p class="mt-2 text-sm text-gray-500">Por favor espera un momento</p>
+          <h2 class="mt-6 text-xl font-semibold text-gray-700">Validating session...</h2>
+          <p class="mt-2 text-sm text-gray-500">Please wait a moment</p>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleDialogClose">
       <!-- Backdrop with smooth fade -->
       <TransitionChild
         as="template"
@@ -345,7 +345,7 @@
     variant="danger"
     confirmText="Yes, delete"
     @confirm="executePermanentDelete"
-    @close="showConfirmModal = false"
+    @close="handleCloseConfirmModal"
   />
 
 </template>
@@ -450,22 +450,48 @@ const handleAdd = async () => {
   if (newItemEmail.value && !isValidEmail(newItemEmail.value)) return
 
   isAdding.value = true
+
+  // Create temporary item for optimistic update
+  const tempId = `temp-${Date.now()}`
+  const tempItem: DropdownItem = {
+    _id: tempId,
+    name: newItemName.value.trim(),
+    email: newItemEmail.value.trim() || undefined,
+    isActive: true
+  }
+
   try {
-    const emailData = needsEmailField.value && newItemEmail.value.trim() 
-      ? { email: newItemEmail.value.trim() } 
+    // Optimistic update: add item to list immediately
+    items.value.unshift(tempItem)
+
+    const emailData = needsEmailField.value && newItemEmail.value.trim()
+      ? { email: newItemEmail.value.trim() }
       : undefined
+
     const response = await dropdownService.create(props.type, newItemName.value.trim(), emailData)
+
     if (response.success) {
+      // Remove temp item
+      items.value = items.value.filter(item => item._id !== tempId)
+
+      // Clear form
       newItemName.value = ''
       newItemEmail.value = ''
-      await loadItems()
+
       emit('updated')
       showSuccessToast('Success', 'Item added successfully')
+
+      // Reload to get the real item from server with proper ID
+      await loadItems()
     } else {
+      // Error - remove temp item
+      items.value = items.value.filter(item => item._id !== tempId)
       showErrorToast('Error', response.message || 'Error adding item')
     }
   } catch (error) {
     console.error('Error adding item:', error)
+    // Remove temp item on error
+    items.value = items.value.filter(item => item._id !== tempId)
     showErrorToast('Error', 'Failed to add item')
   } finally {
     isAdding.value = false
@@ -492,26 +518,48 @@ const handleUpdate = async (id: string) => {
   if (editingEmail.value && !isValidEmail(editingEmail.value)) return
 
   isUpdating.value = true
+
+  // Find the item to update
+  const itemIndex = items.value.findIndex(item => item._id === id)
+  if (itemIndex === -1) return
+
+  // Store original values for rollback
+  const originalItem = { ...items.value[itemIndex] }
+
   try {
     const updateData: { name: string; email?: string } = {
       name: editingName.value.trim(),
     }
-    
+
     if (needsEmailField.value) {
       updateData.email = editingEmail.value.trim() || undefined
     }
-    
+
+    // Optimistic update: update UI immediately
+    items.value[itemIndex].name = updateData.name
+    if (updateData.email !== undefined) {
+      items.value[itemIndex].email = updateData.email
+    }
+
     const response = await dropdownService.update(props.type, id, updateData)
     if (response.success) {
       cancelEdit()
-      await loadItems()
       emit('updated')
       showSuccessToast('Success', 'Item updated successfully')
+
+      // Reload to ensure consistency with server
+      await loadItems()
     } else {
+      // Error - rollback optimistic update
+      items.value[itemIndex] = originalItem
       showErrorToast('Error', response.message || 'Error updating item')
     }
   } catch (error) {
     console.error('Error updating item:', error)
+    // Rollback on error
+    if (itemIndex !== -1) {
+      items.value[itemIndex] = originalItem
+    }
     showErrorToast('Error', 'Failed to update item')
   } finally {
     isUpdating.value = false
@@ -521,20 +569,42 @@ const handleUpdate = async (id: string) => {
 // Toggle active status (soft delete/restore)
 const handleToggleActive = async (id: string, currentStatus: boolean) => {
   isDeletingId.value = id
+
+  // Find the item to update
+  const itemIndex = items.value.findIndex(item => item._id === id)
+  if (itemIndex === -1) return
+
+  // Store original status for rollback
+  const originalStatus = items.value[itemIndex].isActive
+
   try {
+    // Optimistic update: toggle status immediately in UI
+    items.value[itemIndex].isActive = !currentStatus
+
+    // Make API call
     const response = await dropdownService.update(props.type, id, {
       isActive: !currentStatus,
     })
+
     if (response.success) {
-      await loadItems()
+      // Success - keep the optimistic update
       emit('updated')
       const action = currentStatus ? 'deactivated' : 'activated'
       showSuccessToast('Success', `Item ${action} successfully`)
+
+      // Reload to ensure consistency with server
+      await loadItems()
     } else {
+      // Error - rollback optimistic update
+      items.value[itemIndex].isActive = originalStatus
       showErrorToast('Error', response.message || 'Error updating status')
     }
   } catch (error) {
     console.error('Error toggling status:', error)
+    // Rollback on error
+    if (itemIndex !== -1) {
+      items.value[itemIndex].isActive = originalStatus
+    }
     showErrorToast('Error', 'Failed to update status')
   } finally {
     isDeletingId.value = null
@@ -552,6 +622,15 @@ const handlePermanentDelete = async (id: string, name: string) => {
   showConfirmModal.value = true
 }
 
+// Handle close of confirmation modal (only close confirmation modal, not main modal)
+const handleCloseConfirmModal = () => {
+  showConfirmModal.value = false
+  // Reset pending delete data if user cancels
+  if (pendingDeleteData.value && !isPermanentDeletingId.value) {
+    pendingDeleteData.value = null
+  }
+}
+
 // Execute the permanent delete after confirmation
 const executePermanentDelete = async () => {
   if (!pendingDeleteData.value) return
@@ -560,12 +639,21 @@ const executePermanentDelete = async () => {
   isPermanentDeletingId.value = id
 
   try {
+    // Make API call first
     const response = await dropdownService.permanentDelete(props.type, id)
+
     if (response.success) {
+      // Invalidate all cache entries for this type before reloading to ensure fresh data
+      dropdownService.invalidateAllForType(props.type)
+      
+      // Reload items from server to ensure consistency
       await loadItems()
+      
+      // Success - emit updated event and show success message
       emit('updated')
       showSuccessToast('Deleted', `"${name}" has been permanently deleted from the database`)
     } else {
+      // Error - show error message
       showErrorToast('Error', response.message || 'Error deleting item')
     }
   } catch (error) {
@@ -574,7 +662,18 @@ const executePermanentDelete = async () => {
   } finally {
     isPermanentDeletingId.value = null
     pendingDeleteData.value = null
+    // Close confirmation modal after operation completes
+    showConfirmModal.value = false
   }
+}
+
+// Handle dialog close (prevent closing during delete operation)
+const handleDialogClose = () => {
+  // Don't close if there's a delete operation in progress
+  if (isPermanentDeletingId.value || showConfirmModal.value) {
+    return
+  }
+  handleClose()
 }
 
 // Close modal

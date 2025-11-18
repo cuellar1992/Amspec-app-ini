@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot :show="isOpen" as="template">
-    <Dialog as="div" class="relative z-[100000]" @close="handleClose">
+    <Dialog as="div" class="relative z-[100000]" @close="handleDialogClose">
       <!-- Backdrop -->
       <TransitionChild
         as="template"
@@ -498,7 +498,7 @@
     variant="danger"
     confirmText="Yes, delete"
     @confirm="executePermanentDelete"
-    @close="showConfirmModal = false"
+    @close="handleCloseConfirmModal"
   />
 
 </template>
@@ -719,6 +719,8 @@ const handleAdd = async () => {
       // Reset form
       resetNewSampler()
 
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('samplers')
       await loadSamplers()
       emit('updated')
       showSuccessToast('Success', 'Sampler added successfully')
@@ -780,6 +782,8 @@ const handleUpdate = async (id: string) => {
     })
     if (response.success) {
       cancelEdit()
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('samplers')
       await loadSamplers()
       emit('updated')
       showSuccessToast('Success', 'Sampler updated successfully')
@@ -802,6 +806,8 @@ const handleToggleActive = async (id: string, currentStatus: boolean) => {
       isActive: !currentStatus,
     })
     if (response.success) {
+      // Invalidate cache before reloading
+      dropdownService.invalidateAllForType('samplers')
       await loadSamplers()
       emit('updated')
       const action = currentStatus ? 'deactivated' : 'activated'
@@ -828,6 +834,15 @@ const handlePermanentDelete = async (id: string, name: string) => {
   showConfirmModal.value = true
 }
 
+// Handle close of confirmation modal (only close confirmation modal, not main modal)
+const handleCloseConfirmModal = () => {
+  showConfirmModal.value = false
+  // Reset pending delete data if user cancels
+  if (pendingDeleteData.value && !isPermanentDeletingId.value) {
+    pendingDeleteData.value = null
+  }
+}
+
 // Execute the permanent delete after confirmation
 const executePermanentDelete = async () => {
   if (!pendingDeleteData.value) return
@@ -838,7 +853,13 @@ const executePermanentDelete = async () => {
   try {
     const response = await dropdownService.permanentDelete('samplers', id)
     if (response.success) {
+      // Invalidate cache before reloading to ensure fresh data
+      dropdownService.invalidateAllForType('samplers')
+      
+      // Reload samplers from server
       await loadSamplers()
+      
+      // Success - emit updated event and show success message
       emit('updated')
       showSuccessToast('Deleted', `"${name}" has been permanently deleted from the database`)
     } else {
@@ -850,7 +871,18 @@ const executePermanentDelete = async () => {
   } finally {
     isPermanentDeletingId.value = null
     pendingDeleteData.value = null
+    // Close confirmation modal after operation completes
+    showConfirmModal.value = false
   }
+}
+
+// Handle dialog close (prevent closing during delete operation)
+const handleDialogClose = () => {
+  // Don't close if there's a delete operation in progress
+  if (isPermanentDeletingId.value || showConfirmModal.value) {
+    return
+  }
+  handleClose()
 }
 
 // Close modal

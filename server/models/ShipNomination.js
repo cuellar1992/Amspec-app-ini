@@ -119,11 +119,22 @@ shipNominationSchema.statics.updateAllStatuses = async function() {
   return nominations;
 };
 
-// Index for faster queries
+// Indexes for faster queries
 // Note: amspecReference already has a unique index from the schema definition
+
+// Single field indexes
 shipNominationSchema.index({ vesselName: 1 });
 shipNominationSchema.index({ status: 1 });
 shipNominationSchema.index({ createdAt: -1 });
+shipNominationSchema.index({ etb: -1 }); // For sorting by ETB desc
+shipNominationSchema.index({ etc: -1 }); // For sorting by ETC desc
+
+// Compound indexes for common query patterns
+shipNominationSchema.index({ status: 1, etb: -1 }); // Filter by status and sort by ETB
+shipNominationSchema.index({ terminal: 1, etb: -1 }); // Filter by terminal and sort by ETB
+
+// Text index for search functionality (vesselName and amspecReference)
+shipNominationSchema.index({ vesselName: 'text', amspecReference: 'text' });
 
 const ShipNomination = mongoose.model('ShipNomination', shipNominationSchema);
 

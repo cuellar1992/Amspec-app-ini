@@ -25,7 +25,7 @@ export const loginLimiter = rateLimit({
 // Rate limiter general para API
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 300, // 300 requests por IP en 15 minutos (aumentado para operaciones legítimas)
+  max: 1000, // 1000 requests por IP en 15 minutos (aumentado para operaciones con múltiples llamadas)
   message: {
     success: false,
     message: 'Too many requests. Please try again later.',

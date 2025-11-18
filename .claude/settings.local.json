@@ -8,7 +8,11 @@
       "Bash(npm run build)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(npm install compression)",
+      "Bash(npm install pinia)",
+      "Bash(npm install socket.io)",
+      "Bash(npm install socket.io-client)"
     ],
     "deny": [],
     "ask": []
