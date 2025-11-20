@@ -1926,6 +1926,11 @@ const confirmClearLineSampling = () => {
 // Load sampling roster from MongoDB
 const loadSamplingRoster = async (amspecRef: string) => {
   try {
+    // Ensure dropdowns are loaded before loading roster (needed for edit mode dropdowns)
+    if (dropdownsStore.activeSamplers.length === 0) {
+      await dropdownsStore.fetchAllDropdowns()
+    }
+    
     const response = await getSamplingRosterByRef(amspecRef)
     if (response.success && response.data) {
       const roster = response.data
@@ -2733,12 +2738,17 @@ onMounted(async () => {
       // Update dropdowns store with manual data setting
       // (since batch returns different format than individual endpoints)
       dropdownsStore.surveyors = dropdowns.surveyors.map(name => ({ name, isActive: true }))
+      dropdownsStore.activeSurveyors = dropdowns.surveyors
+      
       dropdownsStore.samplers = dropdowns.samplers.map(s => ({
         name: s.name,
-        isActive: true,
+        isActive: true, // Batch API returns only active samplers
         has24HourRestriction: s.has24HourRestriction,
         restrictedDays: s.restrictedDays
       }))
+      // Update activeSamplers when setting samplers manually
+      // Batch API returns only active samplers, so all should be included
+      dropdownsStore.activeSamplers = dropdowns.samplers.map(s => s.name)
 
       // Update validation cache with molekulis and other jobs data
       validationCache.value.molekulisData = molekulisLoadings

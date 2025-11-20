@@ -29,7 +29,7 @@ const router = useRouter()
 const socket = useGlobalSocket()
 
 // ⭐ Usar el composable de validación de sesión
-const { isValidating, isSessionValid, validateSession } = useAuthValidation()
+const { isValidating, isSessionValid, validateSession, isNetworkError } = useAuthValidation()
 
 // ⭐ Configurar listeners de notificaciones de WebSocket centralizados
 // Esto previene notificaciones duplicadas al manejarlas en un solo lugar
@@ -57,10 +57,19 @@ watch(isValidating, (newVal) => {
     }
     // Si estamos en una ruta que requiere auth, continuar
   } else if (!newVal && !isSessionValid.value) {
-    // Si la sesión no es válida y NO estamos en signin, redirigir
-    if (router.currentRoute.value.name !== 'Signin') {
+    // Si la sesión no es válida, verificar si debemos redirigir
+    const hasTokens = localStorage.getItem('accessToken') && localStorage.getItem('refreshToken')
+    
+    // Solo NO redirigir si es un error de red Y hay tokens (servidor no disponible pero tokens válidos)
+    // En todos los demás casos (sin tokens o token inválido/expirado), redirigir a signin
+    if (!(isNetworkError.value && hasTokens) && router.currentRoute.value.name !== 'Signin') {
+      // Redirigir si:
+      // - No es error de red, O
+      // - Es error de red pero no hay tokens, O
+      // - No hay tokens en absoluto
       router.push({ name: 'Signin', query: { redirect: router.currentRoute.value.fullPath } })
     }
+    // Si es error de red pero hay tokens, NO redirigir - permitir que el usuario siga trabajando
   }
 })
 </script>

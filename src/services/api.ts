@@ -134,7 +134,32 @@ api.interceptors.response.use(
             return api(originalRequest)
           }
         } catch (refreshError) {
-          // Error al refrescar, limpiar y redirigir
+          // Verificar si es un error de red
+          const isNetworkError = refreshError && typeof refreshError === 'object' && (
+            ('code' in refreshError && (
+              (refreshError as { code?: string }).code === 'ERR_NETWORK' ||
+              (refreshError as { code?: string }).code === 'ERR_CONNECTION_REFUSED' ||
+              (refreshError as { code?: string }).code === 'ECONNREFUSED'
+            )) ||
+            ('request' in refreshError && !('response' in refreshError)) ||
+            (refreshError instanceof Error && (
+              refreshError.message.includes('Network Error') ||
+              refreshError.message.includes('ERR_CONNECTION_REFUSED') ||
+              refreshError.message.includes('ERR_NETWORK') ||
+              refreshError.message.includes('ECONNREFUSED') ||
+              refreshError.message.includes('timeout')
+            ))
+          )
+
+          if (isNetworkError) {
+            // Error de red - NO limpiar autenticación, solo rechazar el request
+            console.warn('⚠️ Network error during token refresh - server may be unavailable')
+            processQueue(refreshError as Error, null)
+            isRefreshing = false
+            return Promise.reject(refreshError)
+          }
+
+          // Error al refrescar (token inválido/expirado), limpiar y redirigir
           processQueue(refreshError as Error, null)
           isRefreshing = false
           localStorage.removeItem('accessToken')

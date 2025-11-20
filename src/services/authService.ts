@@ -220,6 +220,57 @@ class AuthService {
     }
   }
 
+  // Verificar si un error es de red (servidor no disponible)
+  private isNetworkError(error: unknown): boolean {
+    if (!error) return false;
+    
+    // Verificar si es un error de Axios
+    if (error && typeof error === 'object') {
+      // Error de Axios sin respuesta (network error)
+      if ('code' in error) {
+        const code = (error as { code?: string }).code;
+        if (code === 'ERR_NETWORK' || code === 'ERR_CONNECTION_REFUSED' || code === 'ECONNREFUSED') {
+          return true;
+        }
+      }
+      
+      // Error de Axios con request pero sin response
+      if ('request' in error && !('response' in error)) {
+        return true;
+      }
+      
+      // Verificar mensaje de error
+      if ('message' in error) {
+        const message = String((error as { message?: string }).message || '');
+        if (
+          message.includes('Network Error') ||
+          message.includes('ERR_CONNECTION_REFUSED') ||
+          message.includes('ERR_NETWORK') ||
+          message.includes('ECONNREFUSED') ||
+          message.includes('timeout') ||
+          message.includes('No response received from server')
+        ) {
+          return true;
+        }
+      }
+    }
+    
+    // Verificar si es un Error estándar
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      return (
+        message.includes('network error') ||
+        message.includes('connection refused') ||
+        message.includes('err_network') ||
+        message.includes('econnrefused') ||
+        message.includes('timeout') ||
+        message.includes('no response received')
+      );
+    }
+    
+    return false;
+  }
+
   // Refrescar access token
   async refreshAccessToken(): Promise<string | null> {
     try {
@@ -240,7 +291,14 @@ class AuthService {
 
       return null;
     } catch (error) {
-      // Si el refresh falla, limpiar todo
+      // Si es un error de red (servidor no disponible), NO limpiar la autenticación
+      // Solo limpiar si es un error de autenticación real (token inválido/expirado)
+      if (this.isNetworkError(error)) {
+        console.warn('⚠️ Network error during token refresh - server may be unavailable');
+        throw error; // Re-lanzar sin limpiar auth
+      }
+      
+      // Si el refresh falla por otro motivo (token inválido/expirado), limpiar todo
       this.clearAuth();
       throw error;
     }
