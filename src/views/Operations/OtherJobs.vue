@@ -210,15 +210,6 @@ const timeConfig24hr = {
   minuteIncrement: 15,
 }
 
-const timeConfig = {
-  enableTime: true,
-  noCalendar: true,
-  dateFormat: 'H:i',
-  altInput: true,
-  altFormat: 'h:i K',
-  time_24hr: true,
-  minuteIncrement: 15,
-}
 
 const buildDateTime = (dateStr: string, timeStr: string) => {
   if (!dateStr || !timeStr) return null
@@ -320,7 +311,7 @@ const loadRows = async () => {
     totalPages.value = res.pages ?? Math.ceil((res.total ?? 0) / rowsPerPage.value)
 
     // Update store with fetched data
-    jobsStore.setJobs(res.data)
+    jobsStore.setJobs(res.data.map(j => ({ ...j, status: (j.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
   }
 }
 

@@ -581,12 +581,12 @@ import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue'
 import SamplerConflictModal from '@/components/ui/SamplerConflictModal.vue'
-import { searchShipNominations, type ShipNomination, type ShipNominationData } from '@/services/shipNominationService'
+import { type ShipNomination, type ShipNominationData } from '@/services/shipNominationService'
 import { getSamplingRosterInitData } from '@/services/batchService'
 import type { Terminal } from '@/services/dropdownService'
 import { autogenerateLineSampling, getSamplingRosterByRef, createSamplingRoster, updateSamplingRoster, upsertSamplingRoster, type SamplingRosterData as SamplingRosterDataService } from '@/services/samplingRosterService'
-import type { MolekulisLoading } from '@/services/molekulisLoadingService'
-import type { OtherJob } from '@/services/otherJobsService'
+import { listMolekulisLoadings, type MolekulisLoading } from '@/services/molekulisLoadingService'
+import { listOtherJobs, type OtherJob } from '@/services/otherJobsService'
 import { detectSamplerConflicts, formatConflictMessage } from '@/utils/samplerConflicts'
 
 const toast = useToast()
@@ -2401,7 +2401,8 @@ const dateTimeConfig = {
 }
 
 // Use surveyor options from store
-const surveyorOptions = computed(() => dropdownsStore.activeSurveyors)
+// Surveyor options removed as they were unused
+
 
 // Form submission
 const isSubmitting = ref(false)
@@ -2732,8 +2733,8 @@ onMounted(async () => {
       shipNominations.forEach(ship => shipsStore.addShip(ship))
 
       // Update stores
-      molekulisStore.setLoadings(molekulisLoadings)
-      otherJobsStore.setJobs(otherJobs)
+      molekulisStore.setLoadings(molekulisLoadings.map(l => ({ ...l, status: (l.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
+      otherJobsStore.setJobs(otherJobs.map(j => ({ ...j, status: (j.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
 
       // Update dropdowns store with manual data setting
       // (since batch returns different format than individual endpoints)
@@ -2787,7 +2788,7 @@ onMounted(async () => {
   // Listen for Molekulis Loading events and check conflicts (notifications handled centrally)
   socket.on('molekulis-loading:created', (loading: MolekulisLoading) => {
     // Store is already updated by central notification handler
-    validationCache.value.molekulisData.push(loading)
+    validationCache.value.molekulisData?.push(loading)
 
     // Check for sampler conflicts
     const conflicts = detectSamplerConflicts(
@@ -2805,21 +2806,23 @@ onMounted(async () => {
 
   socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
     // Store is already updated by central notification handler
-    const index = validationCache.value.molekulisData.findIndex(m => m._id === loading._id)
-    if (index !== -1) {
+    const index = validationCache.value.molekulisData?.findIndex(m => m._id === loading._id) ?? -1
+    if (index !== -1 && validationCache.value.molekulisData) {
       validationCache.value.molekulisData[index] = loading
     }
   })
 
   socket.on('molekulis-loading:deleted', (data: { id: string }) => {
     // Store is already updated by central notification handler
-    validationCache.value.molekulisData = validationCache.value.molekulisData.filter(m => m._id !== data.id)
+    if (validationCache.value.molekulisData) {
+      validationCache.value.molekulisData = validationCache.value.molekulisData.filter(m => m._id !== data.id)
+    }
   })
 
   // Listen for Other Job events and check conflicts (notifications handled centrally)
   socket.on('other-job:created', (job: OtherJob) => {
     // Store is already updated by central notification handler
-    validationCache.value.otherJobsData.push(job)
+    validationCache.value.otherJobsData?.push(job)
 
     // Check for sampler conflicts
     const conflicts = detectSamplerConflicts(
@@ -2837,15 +2840,17 @@ onMounted(async () => {
 
   socket.on('other-job:updated', (job: OtherJob) => {
     // Store is already updated by central notification handler
-    const index = validationCache.value.otherJobsData.findIndex(o => o._id === job._id)
-    if (index !== -1) {
+    const index = validationCache.value.otherJobsData?.findIndex(o => o._id === job._id) ?? -1
+    if (index !== -1 && validationCache.value.otherJobsData) {
       validationCache.value.otherJobsData[index] = job
     }
   })
 
   socket.on('other-job:deleted', (data: { id: string }) => {
     // Store is already updated by central notification handler
-    validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(o => o._id !== data.id)
+    if (validationCache.value.otherJobsData) {
+      validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(o => o._id !== data.id)
+    }
   })
 })
 

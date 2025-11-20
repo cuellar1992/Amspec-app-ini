@@ -918,7 +918,7 @@ const handleEtbChange = async (selectedDates: Date[]) => {
 }
 
 // Handle ETC change
-const handleEtcChange = async (selectedDates: Date[]) => {
+const handleEtcChange = async () => {
   // Skip if we're loading form data
   if (isLoadingFormData.value) {
     return
@@ -1338,9 +1338,9 @@ const handleSubmit = async () => {
       clients: formData.value.clients.length > 0 ? formData.value.clients.map((c) => c.value) : undefined,
       productTypes: formData.value.productTypes.map((pt) => pt.value),
       agent: formData.value.agent || undefined,
-      pilotOnBoard: formData.value.pilotOnBoard || undefined,
-      etb: formData.value.etb || undefined,
-      etc: formData.value.etc || undefined,
+      pilotOnBoard: formData.value.pilotOnBoard ? new Date(formData.value.pilotOnBoard).toISOString() : undefined,
+      etb: formData.value.etb ? new Date(formData.value.etb).toISOString() : undefined,
+      etc: formData.value.etc ? new Date(formData.value.etc).toISOString() : undefined,
       terminal: formData.value.terminal || undefined,
       berth: formData.value.berth || undefined,
       surveyor: formData.value.surveyor || undefined,

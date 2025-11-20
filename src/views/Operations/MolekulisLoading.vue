@@ -406,7 +406,7 @@ const loadItems = async () => {
       totalPages.value = res.pages ?? Math.ceil((res.total ?? 0) / effectiveLimit)
 
       // Update store with fetched data
-      loadingStore.setLoadings(res.data)
+      loadingStore.setLoadings(res.data.map(l => ({ ...l, status: (l.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
     }
   } catch {
     // noop
