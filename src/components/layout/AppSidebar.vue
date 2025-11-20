@@ -203,15 +203,15 @@
   </aside>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, type Component } from "vue";
 import { useRoute } from "vue-router";
 
 import {
   ChevronDownIcon,
   HorizontalDots,
 } from "../../icons";
-import { Ship, Calendar, LayoutDashboard, Users } from 'lucide-vue-next';
+import { Ship, LayoutDashboard, Users } from 'lucide-vue-next';
 import { useSidebar } from "@/composables/useSidebar";
 import { usePermissions } from "@/composables/usePermissions";
 
@@ -225,7 +225,29 @@ onMounted(async () => {
   await loadUserRole();
 });
 
-const allMenuGroups = [
+// Define types for menu items
+interface SubMenuItem {
+  name: string
+  path: string
+  permission?: string
+  pro?: boolean
+  new?: boolean
+}
+
+interface MenuItem {
+  icon?: Component
+  name: string
+  path?: string
+  permission?: string
+  subItems?: SubMenuItem[]
+}
+
+interface MenuGroup {
+  title: string
+  items: MenuItem[]
+}
+
+const allMenuGroups: MenuGroup[] = [
   {
     title: "Menu",
     items: [
@@ -235,12 +257,14 @@ const allMenuGroups = [
         path: "/",
         permission: "menu.dashboard",
       },
+      /*
       {
         icon: Calendar,
         name: "Calendar",
         path: "/calendar",
         permission: "menu.calendar",
       },
+      */
       {
         name: "Operations",
         icon: Ship,
@@ -301,9 +325,9 @@ const menuGroups = computed(() => {
   })).filter(group => group.items.length > 0);
 });
 
-const isActive = (path) => route.path === path;
+const isActive = (path: string) => route.path === path;
 
-const toggleSubmenu = (groupIndex, itemIndex) => {
+const toggleSubmenu = (groupIndex: number, itemIndex: number) => {
   const key = `${groupIndex}-${itemIndex}`;
   openSubmenu.value = openSubmenu.value === key ? null : key;
 };
@@ -319,7 +343,7 @@ const isAnySubmenuRouteActive = computed(() => {
   );
 });
 
-const isSubmenuOpen = (groupIndex, itemIndex) => {
+const isSubmenuOpen = (groupIndex: number, itemIndex: number) => {
   const key = `${groupIndex}-${itemIndex}`;
   const groups = menuGroups.value;
   if (!Array.isArray(groups) || !groups[groupIndex]) return false;
@@ -333,15 +357,16 @@ const isSubmenuOpen = (groupIndex, itemIndex) => {
   );
 };
 
-const startTransition = (el) => {
-  el.style.height = "auto";
-  const height = el.scrollHeight;
-  el.style.height = "0px";
-  el.offsetHeight; // force reflow
-  el.style.height = height + "px";
+const startTransition = (el: Element) => {
+  const element = el as HTMLElement
+  element.style.height = "auto";
+  const height = element.scrollHeight;
+  element.style.height = "0px";
+  void element.offsetHeight; // force reflow
+  element.style.height = height + "px";
 };
 
-const endTransition = (el) => {
-  el.style.height = "";
+const endTransition = (el: Element) => {
+  (el as HTMLElement).style.height = "";
 };
 </script>

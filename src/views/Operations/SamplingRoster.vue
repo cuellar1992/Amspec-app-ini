@@ -4,10 +4,13 @@
 
     <div class="mt-4 grid grid-cols-1 lg:grid-cols-5 gap-6">
       <!-- Left: Form -->
-      <ComponentCard title="New Sampling Roster" description="Register a new sampling roster entry" class="lg:col-span-2">
+      <ComponentCard
+        title="New Sampling Roster"
+        description="Register a new sampling roster entry"
+        class="lg:col-span-2"
+      >
         <div class="p-6">
           <form class="space-y-6" @keydown.enter.prevent>
-
             <!-- Search Ship Nomination -->
             <div class="pb-4 border-b border-gray-200 dark:border-gray-700">
               <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
@@ -28,7 +31,12 @@
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
 
                 <!-- Info message when showing only recent items -->
@@ -46,7 +54,7 @@
                   v-if="showDropdown && filteredShipNominations.length > 0"
                   :class="[
                     'absolute z-10 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 max-h-60 overflow-y-auto',
-                    !searchQuery ? 'mt-16' : 'mt-1'
+                    !searchQuery ? 'mt-16' : 'mt-1',
                   ]"
                 >
                   <button
@@ -72,7 +80,10 @@
                         {{ ship.status || 'pending' }}
                       </span>
                     </div>
-                    <div v-if="ship.berth || ship.etb" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div
+                      v-if="ship.berth || ship.etb"
+                      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                    >
                       <span v-if="ship.berth">Berth: {{ ship.berth }}</span>
                       <span v-if="ship.berth && ship.etb"> | </span>
                       <span v-if="ship.etb">ETB: {{ formatDateShort(ship.etb) }}</span>
@@ -82,7 +93,12 @@
 
                 <!-- No results message -->
                 <div
-                  v-if="showDropdown && searchQuery && filteredShipNominations.length === 0 && !isLoadingShips"
+                  v-if="
+                    showDropdown &&
+                    searchQuery &&
+                    filteredShipNominations.length === 0 &&
+                    !isLoadingShips
+                  "
                   class="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 p-4"
                 >
                   <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -95,9 +111,7 @@
                   v-if="isLoadingShips"
                   class="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 p-4"
                 >
-                  <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
-                    Loading...
-                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 text-center">Loading...</p>
                 </div>
               </div>
             </div>
@@ -183,7 +197,11 @@
                   :config="dateTimeConfig"
                   @on-change="handleStartDischargeChange"
                   class="h-11 w-full appearance-none rounded-lg border bg-white px-4 py-2.5 text-sm text-gray-900 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white"
-                  :class="submittedOnce && !formData.startDischarge ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'"
+                  :class="
+                    submittedOnce && !formData.startDischarge
+                      ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600'
+                      : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'
+                  "
                   placeholder="Auto-calculated (ETB + 3hrs)"
                 />
               </div>
@@ -197,7 +215,11 @@
                   min="0"
                   step="1"
                   class="h-11 w-full appearance-none rounded-lg border bg-white px-4 py-2.5 text-sm text-gray-900 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white"
-                  :class="submittedOnce && !formData.dischargeTimeHours ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'"
+                  :class="
+                    submittedOnce && !formData.dischargeTimeHours
+                      ? 'border-red-500 focus:ring-red-500/20 dark:border-red-600'
+                      : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'
+                  "
                   placeholder="Enter hours"
                 />
               </div>
@@ -301,7 +323,6 @@
                 </button>
               </div>
             </div>
-
           </form>
         </div>
       </ComponentCard>
@@ -309,22 +330,56 @@
       <!-- Right: Office Sampling -->
       <ComponentCard title="Roster" description="Sampling roster schedule" class="lg:col-span-3">
         <div class="p-6">
-          <h4 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Office Sampling</h4>
-          
-          <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <h4 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+            Office Sampling
+          </h4>
+
+          <div
+            class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+          >
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Who</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">START OFFICE</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">FINISH SAMPLING</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">HOURS</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">ACTIONS</th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    Who
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    START OFFICE
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    FINISH SAMPLING
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    HOURS
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    ACTIONS
+                  </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                <tr v-if="officeSamplingData.length === 0" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <td colspan="5" class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400">No data available. Select a vessel to populate the table.</td>
+              <tbody
+                class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+              >
+                <tr
+                  v-if="officeSamplingData.length === 0"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                >
+                  <td
+                    colspan="5"
+                    class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400"
+                  >
+                    No data available. Select a vessel to populate the table.
+                  </td>
                 </tr>
                 <tr
                   v-for="(record, index) in officeSamplingData"
@@ -339,11 +394,13 @@
                       class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-800"
                     >
                       <option value="">Select sampler</option>
-                      <option v-for="sampler in samplerOptions" :key="sampler" :value="sampler">{{ sampler }}</option>
+                      <option v-for="sampler in samplerOptions" :key="sampler" :value="sampler">
+                        {{ sampler }}
+                      </option>
                     </select>
                     <span v-else class="block">{{ record.who || '-' }}</span>
                   </td>
-                  
+
                   <!-- START OFFICE -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <div v-show="editingIndex === index">
@@ -356,7 +413,7 @@
                     </div>
                     <span v-show="editingIndex !== index">{{ record.startOffice || '-' }}</span>
                   </td>
-                  
+
                   <!-- FINISH SAMPLING -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <div v-show="editingIndex === index">
@@ -369,13 +426,13 @@
                     </div>
                     <span v-show="editingIndex !== index">{{ record.finishSampling || '-' }}</span>
                   </td>
-                  
+
                   <!-- HOURS -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <span v-if="editingIndex === index">{{ calculateEditingHours }}</span>
                     <span v-else>{{ record.hours || '-' }}</span>
                   </td>
-                  
+
                   <!-- ACTIONS -->
                   <td class="whitespace-nowrap px-6 py-4 text-sm">
                     <div v-if="editingIndex === index" class="flex items-center gap-2">
@@ -385,7 +442,12 @@
                         title="Save"
                       >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </button>
                       <button
@@ -394,7 +456,12 @@
                         title="Cancel"
                       >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -405,7 +472,12 @@
                       title="Edit"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                     </button>
                   </td>
@@ -436,21 +508,53 @@
               </button>
             </div>
           </div>
-          
-          <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+
+          <div
+            class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+          >
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Who</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Start</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Finish</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Hours</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">ACTIONS</th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    Who
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    Start
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    Finish
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    Hours
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                  >
+                    ACTIONS
+                  </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                <tr v-if="lineSamplingData.length === 0" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <td colspan="5" class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400">No data available.</td>
+              <tbody
+                class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+              >
+                <tr
+                  v-if="lineSamplingData.length === 0"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                >
+                  <td
+                    colspan="5"
+                    class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400"
+                  >
+                    No data available.
+                  </td>
                 </tr>
                 <tr
                   v-for="(record, index) in lineSamplingData"
@@ -465,11 +569,13 @@
                       class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-800"
                     >
                       <option value="">Select sampler</option>
-                      <option v-for="sampler in samplerOptions" :key="sampler" :value="sampler">{{ sampler }}</option>
+                      <option v-for="sampler in samplerOptions" :key="sampler" :value="sampler">
+                        {{ sampler }}
+                      </option>
                     </select>
                     <span v-else class="block">{{ record.who || '-' }}</span>
                   </td>
-                  
+
                   <!-- Start Line Sampling -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <div v-show="editingLineIndex === index">
@@ -480,9 +586,11 @@
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-800"
                       />
                     </div>
-                    <span v-show="editingLineIndex !== index">{{ record.startLineSampling || '-' }}</span>
+                    <span v-show="editingLineIndex !== index">{{
+                      record.startLineSampling || '-'
+                    }}</span>
                   </td>
-                  
+
                   <!-- Finish Line Sampling -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <div v-show="editingLineIndex === index">
@@ -493,15 +601,17 @@
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-800"
                       />
                     </div>
-                    <span v-show="editingLineIndex !== index">{{ record.finishLineSampling || '-' }}</span>
+                    <span v-show="editingLineIndex !== index">{{
+                      record.finishLineSampling || '-'
+                    }}</span>
                   </td>
-                  
+
                   <!-- Hours -->
                   <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <span v-if="editingLineIndex === index">{{ calculateLineEditingHours }}</span>
                     <span v-else>{{ record.hours || '-' }}</span>
                   </td>
-                  
+
                   <!-- ACTIONS -->
                   <td class="whitespace-nowrap px-6 py-4 text-sm">
                     <div v-if="editingLineIndex === index" class="flex items-center gap-2">
@@ -511,7 +621,12 @@
                         title="Save"
                       >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </button>
                       <button
@@ -520,7 +635,12 @@
                         title="Cancel"
                       >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -531,7 +651,12 @@
                       title="Edit"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                     </button>
                   </td>
@@ -542,7 +667,6 @@
         </div>
       </ComponentCard>
     </div>
-
   </AdminLayout>
 
   <!-- Confirmation Modal for Clearing Line Sampling -->
@@ -584,7 +708,14 @@ import SamplerConflictModal from '@/components/ui/SamplerConflictModal.vue'
 import { type ShipNomination, type ShipNominationData } from '@/services/shipNominationService'
 import { getSamplingRosterInitData } from '@/services/batchService'
 import type { Terminal } from '@/services/dropdownService'
-import { autogenerateLineSampling, getSamplingRosterByRef, createSamplingRoster, updateSamplingRoster, upsertSamplingRoster, type SamplingRosterData as SamplingRosterDataService } from '@/services/samplingRosterService'
+import {
+  autogenerateLineSampling,
+  getSamplingRosterByRef,
+  createSamplingRoster,
+  updateSamplingRoster,
+  upsertSamplingRoster,
+  type SamplingRosterData as SamplingRosterDataService,
+} from '@/services/samplingRosterService'
 import { listMolekulisLoadings, type MolekulisLoading } from '@/services/molekulisLoadingService'
 import { listOtherJobs, type OtherJob } from '@/services/otherJobsService'
 import { detectSamplerConflicts, formatConflictMessage } from '@/utils/samplerConflicts'
@@ -670,7 +801,7 @@ const editingData = ref<{
   who: '',
   startOffice: '',
   finishSampling: '',
-  hours: ''
+  hours: '',
 })
 
 // Line Sampling Data Interface
@@ -695,7 +826,7 @@ const editingLineData = ref<{
   who: '',
   startLineSampling: '',
   finishLineSampling: '',
-  hours: ''
+  hours: '',
 })
 
 // Complete sampler data interface for validation
@@ -804,22 +935,23 @@ const populateOfficeSamplingTable = (ship: ShipNomination) => {
   const startOfficeDate = new Date(ship.pilotOnBoard)
 
   // FINISH SAMPLING: Pilot on Board + 5 hours
-  const finishSamplingDate = new Date(startOfficeDate.getTime() + (5 * 60 * 60 * 1000))
+  const finishSamplingDate = new Date(startOfficeDate.getTime() + 5 * 60 * 60 * 1000)
 
   // HOURS: Calculate difference
   const hours = calculateHours(startOfficeDate, finishSamplingDate)
 
   // Create new array to ensure reactivity
-  officeSamplingData.value = [{
-    who: ship.sampler,
-    startOffice: formatDateTimeForTable(ship.pilotOnBoard),
-    startOfficeRaw: startOfficeDate.toISOString(),
-    finishSampling: formatDateTimeForTable(finishSamplingDate.toISOString()),
-    finishSamplingRaw: finishSamplingDate.toISOString(),
-    hours: `${hours} hrs`
-  }]
+  officeSamplingData.value = [
+    {
+      who: ship.sampler,
+      startOffice: formatDateTimeForTable(ship.pilotOnBoard),
+      startOfficeRaw: startOfficeDate.toISOString(),
+      finishSampling: formatDateTimeForTable(finishSamplingDate.toISOString()),
+      finishSamplingRaw: finishSamplingDate.toISOString(),
+      hours: `${hours} hrs`,
+    },
+  ]
 }
-
 
 // Start editing a record
 const startEdit = (index: number) => {
@@ -829,18 +961,18 @@ const startEdit = (index: number) => {
     who: record.who,
     startOffice: formatDateTimeForInput(record.startOfficeRaw),
     finishSampling: formatDateTimeForInput(record.finishSamplingRaw),
-    hours: record.hours
+    hours: record.hours,
   }
 }
 
 // Save edited record
 const saveEdit = async (index: number) => {
   const currentRecord = officeSamplingData.value[index]
-  
+
   // Use existing dates if not provided in editing data
   let startDate: Date
   let finishDate: Date
-  
+
   if (editingData.value.startOffice) {
     startDate = new Date(editingData.value.startOffice)
     if (isNaN(startDate.getTime())) {
@@ -851,7 +983,7 @@ const saveEdit = async (index: number) => {
     // Use existing date if not changed
     startDate = new Date(currentRecord.startOfficeRaw)
   }
-  
+
   if (editingData.value.finishSampling) {
     finishDate = new Date(editingData.value.finishSampling)
     if (isNaN(finishDate.getTime())) {
@@ -884,7 +1016,7 @@ const saveEdit = async (index: number) => {
     startOfficeRaw: startDate.toISOString(),
     finishSampling: formatDateTimeForTable(finishDate.toISOString()),
     finishSamplingRaw: finishDate.toISOString(),
-    hours: `${hours} hrs`
+    hours: `${hours} hrs`,
   }
 
   // Create new array with updated record
@@ -898,14 +1030,14 @@ const saveEdit = async (index: number) => {
     who: '',
     startOffice: '',
     finishSampling: '',
-    hours: ''
+    hours: '',
   }
-  
+
   // Auto-save after editing (only officeSampling field will be sent)
   if (hasLineSamplingGenerated.value) {
     await autoSave()
   }
-  
+
   toast.success('Record updated successfully')
 }
 
@@ -916,7 +1048,7 @@ const cancelOfficeSamplingEdit = () => {
     who: '',
     startOffice: '',
     finishSampling: '',
-    hours: ''
+    hours: '',
   }
 }
 
@@ -928,7 +1060,7 @@ const startLineEdit = (index: number) => {
     who: record.who,
     startLineSampling: formatDateTimeForInput(record.startLineSamplingRaw),
     finishLineSampling: formatDateTimeForInput(record.finishLineSamplingRaw),
-    hours: record.hours
+    hours: record.hours,
   }
 }
 
@@ -947,13 +1079,13 @@ const doShiftsOverlap = (start1: Date, end1: Date, start2: Date, end2: Date): bo
 const validateShiftOverlap = (index: number, newStart: Date, newFinish: Date): boolean => {
   for (let i = 0; i < lineSamplingData.value.length; i++) {
     if (i === index) continue // Skip the current shift being edited
-    
+
     const otherShift = lineSamplingData.value[i]
     if (!otherShift.startLineSamplingRaw || !otherShift.finishLineSamplingRaw) continue
-    
+
     const otherStart = new Date(otherShift.startLineSamplingRaw)
     const otherFinish = new Date(otherShift.finishLineSamplingRaw)
-    
+
     if (doShiftsOverlap(newStart, newFinish, otherStart, otherFinish)) {
       return false
     }
@@ -962,65 +1094,73 @@ const validateShiftOverlap = (index: number, newStart: Date, newFinish: Date): b
 }
 
 // Calculate adjusted subsequent shifts without applying them (for validation)
-const calculateAdjustedSubsequentShifts = async (index: number, newFinishTime: Date): Promise<LineSamplingRecord[]> => {
+const calculateAdjustedSubsequentShifts = async (
+  index: number,
+  newFinishTime: Date,
+): Promise<LineSamplingRecord[]> => {
   if (index >= lineSamplingData.value.length - 1) {
     return [] // No subsequent shifts to adjust
   }
-  
+
   // Get ETC (end of discharge period) for adjusting last shift
   let etcDate: Date | null = null
   if (formData.value.startDischarge && formData.value.dischargeTimeHours) {
     let startDischargeISO: string
-    if (formData.value.startDischarge.includes('T') || formData.value.startDischarge.includes('Z')) {
+    if (
+      formData.value.startDischarge.includes('T') ||
+      formData.value.startDischarge.includes('Z')
+    ) {
       startDischargeISO = formData.value.startDischarge
     } else {
       const startDate = new Date(formData.value.startDischarge.replace(' ', 'T'))
       startDischargeISO = startDate.toISOString()
     }
     const startDischargeDate = new Date(startDischargeISO)
-    etcDate = new Date(startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000)
+    etcDate = new Date(
+      startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000,
+    )
   }
-  
+
   let currentStart = new Date(newFinishTime)
   const adjustedShifts: LineSamplingRecord[] = []
-  
+
   // Calculate all subsequent shifts
   for (let i = index + 1; i < lineSamplingData.value.length; i++) {
     const currentShift = lineSamplingData.value[i]
-    
+
     // Check if we've already reached ETC before starting this shift
     if (etcDate && currentStart >= etcDate) {
       break
     }
-    
+
     // Calculate new shift end (12 hours from start)
     let newShiftEnd = new Date(currentStart.getTime() + 12 * 60 * 60 * 1000)
-    
+
     // Check if end time would exceed ETC
     if (etcDate && newShiftEnd > etcDate) {
       newShiftEnd = etcDate
     }
-    
+
     const shiftHours = calculateHoursNumber(currentStart, newShiftEnd)
-    
+
     adjustedShifts.push({
       who: currentShift.who,
       startLineSampling: formatDateTimeForTable(currentStart.toISOString()),
       startLineSamplingRaw: currentStart.toISOString(),
       finishLineSampling: formatDateTimeForTable(newShiftEnd.toISOString()),
       finishLineSamplingRaw: newShiftEnd.toISOString(),
-      hours: `${shiftHours.toFixed(2)} hrs`
+      hours: `${shiftHours.toFixed(2)} hrs`,
     })
-    
+
     // Move to next shift start
     currentStart = new Date(newShiftEnd)
-    
+
     // If we've reached ETC (shift ends exactly at ETC or beyond), stop adjusting
     if (etcDate && newShiftEnd >= etcDate) {
       break
     }
   }
-  
+
   // After adjusting existing shifts, check if we need to add more shifts to reach ETC
   if (etcDate && currentStart < etcDate) {
     // Generate additional shifts until we reach ETC
@@ -1028,7 +1168,7 @@ const calculateAdjustedSubsequentShifts = async (index: number, newFinishTime: D
     const availableSamplers: string[] = samplersData.value
       .filter((s: SamplerData) => s.isActive)
       .map((s: SamplerData) => s.name)
-    
+
     if (availableSamplers.length > 0) {
       // Get used samplers from existing shifts (excluding the one being edited)
       const usedSamplers: string[] = []
@@ -1042,20 +1182,20 @@ const calculateAdjustedSubsequentShifts = async (index: number, newFinishTime: D
           usedSamplers.push(shift.who)
         }
       }
-      
+
       // Rotate samplers for new shifts (start with least used)
       const samplerUsage = new Map<string, number>()
       availableSamplers.forEach((name: string) => {
-        samplerUsage.set(name, usedSamplers.filter(s => s === name).length)
+        samplerUsage.set(name, usedSamplers.filter((s) => s === name).length)
       })
-      
+
       // Sort by usage (least used first)
       const sortedSamplers = [...availableSamplers].sort((a, b) => {
         return (samplerUsage.get(a) || 0) - (samplerUsage.get(b) || 0)
       })
-      
+
       let samplerIndex = 0
-      
+
       // Generate shifts until ETC
       while (currentStart < etcDate) {
         // Calculate shift end (12 hours or until ETC)
@@ -1063,28 +1203,28 @@ const calculateAdjustedSubsequentShifts = async (index: number, newFinishTime: D
         if (newShiftEnd > etcDate) {
           newShiftEnd = etcDate
         }
-        
+
         const shiftHours = calculateHoursNumber(currentStart, newShiftEnd)
-        
+
         // Assign sampler (rotate through available samplers)
         const assignedSampler = sortedSamplers[samplerIndex % sortedSamplers.length]
-        
+
         adjustedShifts.push({
           who: assignedSampler,
           startLineSampling: formatDateTimeForTable(currentStart.toISOString()),
           startLineSamplingRaw: currentStart.toISOString(),
           finishLineSampling: formatDateTimeForTable(newShiftEnd.toISOString()),
           finishLineSamplingRaw: newShiftEnd.toISOString(),
-          hours: `${shiftHours.toFixed(2)} hrs`
+          hours: `${shiftHours.toFixed(2)} hrs`,
         })
-        
+
         // Update sampler usage
         samplerUsage.set(assignedSampler, (samplerUsage.get(assignedSampler) || 0) + 1)
         samplerIndex++
-        
+
         // Move to next shift start
         currentStart = new Date(newShiftEnd)
-        
+
         // If we've reached ETC, stop
         if (currentStart >= etcDate) {
           break
@@ -1092,7 +1232,7 @@ const calculateAdjustedSubsequentShifts = async (index: number, newFinishTime: D
       }
     }
   }
-  
+
   return adjustedShifts
 }
 
@@ -1103,11 +1243,11 @@ const getWeekRange = (date: Date): { start: Date; end: Date } => {
   const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Adjust to Monday
   const monday = new Date(d.setDate(diff))
   monday.setHours(0, 0, 0, 0)
-  
+
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
   sunday.setHours(23, 59, 59, 999)
-  
+
   return { start: monday, end: sunday }
 }
 
@@ -1115,12 +1255,12 @@ const getWeekRange = (date: Date): { start: Date; end: Date } => {
 const hasRestrictedDay = (shiftStart: Date, shiftEnd: Date, restrictedDays: number[]): boolean => {
   const start = new Date(shiftStart)
   const end = new Date(shiftEnd)
-  
+
   // Check each day the shift spans
   const current = new Date(start)
   current.setHours(0, 0, 0, 0)
   const checkDate = new Date(current)
-  
+
   while (checkDate <= end) {
     const dayOfWeek = checkDate.getDay() // 0 = Sunday, 6 = Saturday
     if (restrictedDays.includes(dayOfWeek)) {
@@ -1128,7 +1268,7 @@ const hasRestrictedDay = (shiftStart: Date, shiftEnd: Date, restrictedDays: numb
     }
     checkDate.setDate(checkDate.getDate() + 1)
   }
-  
+
   return false
 }
 
@@ -1137,59 +1277,59 @@ const validateShiftsAfterAdjustment = (
   editedIndex: number,
   newStart: Date,
   newFinish: Date,
-  adjustedShifts: LineSamplingRecord[]
+  adjustedShifts: LineSamplingRecord[],
 ): boolean => {
   // Check edited shift against all other shifts (excluding subsequent ones that will be adjusted)
   for (let i = 0; i < lineSamplingData.value.length; i++) {
     if (i === editedIndex || i > editedIndex) continue // Skip edited shift and subsequent shifts (they'll be adjusted)
-    
+
     const otherShift = lineSamplingData.value[i]
     if (!otherShift.startLineSamplingRaw || !otherShift.finishLineSamplingRaw) continue
-    
+
     const otherStart = new Date(otherShift.startLineSamplingRaw)
     const otherFinish = new Date(otherShift.finishLineSamplingRaw)
-    
+
     if (doShiftsOverlap(newStart, newFinish, otherStart, otherFinish)) {
       return false
     }
   }
-  
+
   // Check adjusted shifts against each other and against previous shifts
   for (let i = 0; i < adjustedShifts.length; i++) {
     const adjustedShift = adjustedShifts[i]
     const adjStart = new Date(adjustedShift.startLineSamplingRaw)
     const adjFinish = new Date(adjustedShift.finishLineSamplingRaw)
-    
+
     // Check against edited shift
     if (doShiftsOverlap(adjStart, adjFinish, newStart, newFinish)) {
       return false
     }
-    
+
     // Check against other adjusted shifts
     for (let j = i + 1; j < adjustedShifts.length; j++) {
       const otherAdjShift = adjustedShifts[j]
       const otherAdjStart = new Date(otherAdjShift.startLineSamplingRaw)
       const otherAdjFinish = new Date(otherAdjShift.finishLineSamplingRaw)
-      
+
       if (doShiftsOverlap(adjStart, adjFinish, otherAdjStart, otherAdjFinish)) {
         return false
       }
     }
-    
+
     // Check against previous shifts (before edited one)
     for (let j = 0; j < editedIndex; j++) {
       const prevShift = lineSamplingData.value[j]
       if (!prevShift.startLineSamplingRaw || !prevShift.finishLineSamplingRaw) continue
-      
+
       const prevStart = new Date(prevShift.startLineSamplingRaw)
       const prevFinish = new Date(prevShift.finishLineSamplingRaw)
-      
+
       if (doShiftsOverlap(adjStart, adjFinish, prevStart, prevFinish)) {
         return false
       }
     }
   }
-  
+
   return true
 }
 
@@ -1208,7 +1348,7 @@ const validationCache = ref<ValidationCacheData>({
   molekulisData: null,
   otherJobsData: null,
   lastFetch: 0,
-  CACHE_DURATION: 15 * 60 * 1000 // 15 minutes cache - increased to reduce API calls
+  CACHE_DURATION: 15 * 60 * 1000, // 15 minutes cache - increased to reduce API calls
 })
 
 // Validate sampler restrictions for manual edits (same rules as autogenerate)
@@ -1216,8 +1356,8 @@ const validateSamplerRestrictions = async (
   samplerName: string,
   shiftStart: Date,
   shiftEnd: Date,
-  excludeIndex?: number // Index of shift being edited to exclude from conflicts
-): Promise<{ 
+  excludeIndex?: number, // Index of shift being edited to exclude from conflicts
+): Promise<{
   valid: boolean
   reason?: string
   conflictDetails?: {
@@ -1264,10 +1404,12 @@ const validateSamplerRestrictions = async (
 
   // Check restricted days
   if (hasRestrictedDay(shiftStart, shiftEnd, sampler.restrictedDays || [])) {
-    const restrictedDays = (sampler.restrictedDays || []).map((d: number) => {
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-      return days[d]
-    }).join(', ')
+    const restrictedDays = (sampler.restrictedDays || [])
+      .map((d: number) => {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        return days[d]
+      })
+      .join(', ')
     isValidatingSampler.value = false
     return { valid: false, reason: `Cannot work on restricted days: ${restrictedDays}` }
   }
@@ -1278,14 +1420,14 @@ const validateSamplerRestrictions = async (
   const MIN_REST_HOURS = 10
   for (let i = 0; i < lineSamplingData.value.length; i++) {
     if (i === excludeIndex) continue // Skip the shift being edited
-    
+
     const otherShift = lineSamplingData.value[i]
     if (!otherShift.who || otherShift.who !== samplerName) continue
     if (!otherShift.startLineSamplingRaw || !otherShift.finishLineSamplingRaw) continue
-    
+
     const otherStart = new Date(otherShift.startLineSamplingRaw)
     const otherFinish = new Date(otherShift.finishLineSamplingRaw)
-    
+
     // Check if shifts overlap (sampler is in another shift at the same time)
     if (doShiftsOverlap(shiftStart, shiftEnd, otherStart, otherFinish)) {
       const previousShiftDuration = calculateHoursNumber(otherStart, otherFinish)
@@ -1297,15 +1439,15 @@ const validateSamplerRestrictions = async (
             start: otherStart,
             end: otherFinish,
             duration: `${previousShiftDuration.toFixed(1)}h`,
-            source: 'Line Sampling'
-          }
-        }
+            source: 'Line Sampling',
+          },
+        },
       }
     }
-    
+
     // Check if this shift comes before or after the edited shift
     let restHours: number
-    
+
     if (shiftStart >= otherFinish) {
       // Edited shift starts after other shift ends
       restHours = calculateHoursNumber(otherFinish, shiftStart)
@@ -1316,7 +1458,7 @@ const validateSamplerRestrictions = async (
       // Already handled overlap case above
       continue
     }
-    
+
     // If shifts are consecutive (one ends exactly when the other starts or very close)
     // and rest is less than minimum, it's invalid
     if (restHours < MIN_REST_HOURS) {
@@ -1329,19 +1471,19 @@ const validateSamplerRestrictions = async (
             start: otherStart,
             end: otherFinish,
             duration: `${previousShiftDuration.toFixed(1)}h`,
-            source: 'Line Sampling'
+            source: 'Line Sampling',
           },
-          restHours: restHours
-        }
+          restHours: restHours,
+        },
       }
     }
   }
-  
+
   // Check weekly hours limit (if restricted)
   const WEEKLY_MAX_HOURS_24 = 24
   if (sampler.has24HourRestriction) {
     const weekRange = getWeekRange(shiftStart)
-    
+
     // Collect all shifts for this week to show in modal
     const existingShifts: Array<{
       start: Date
@@ -1349,22 +1491,22 @@ const validateSamplerRestrictions = async (
       duration: number
       source: string
     }> = []
-    
+
     // Calculate weekly hours from all shifts (including this one)
     const proposedShiftHours = calculateHoursNumber(shiftStart, shiftEnd)
     let currentWeeklyHours = 0
-    
+
     // Collect shifts from Line Sampling
     for (let i = 0; i < lineSamplingData.value.length; i++) {
       if (i === excludeIndex) continue
-      
+
       const otherShift = lineSamplingData.value[i]
       if (!otherShift.who || otherShift.who !== samplerName) continue
       if (!otherShift.startLineSamplingRaw || !otherShift.finishLineSamplingRaw) continue
-      
+
       const otherStart = new Date(otherShift.startLineSamplingRaw)
       const otherFinish = new Date(otherShift.finishLineSamplingRaw)
-      
+
       // Only count hours within the same week
       const shiftWeekRange = getWeekRange(otherStart)
       if (shiftWeekRange.start.getTime() === weekRange.start.getTime()) {
@@ -1377,12 +1519,12 @@ const validateSamplerRestrictions = async (
             start: otherStart,
             end: otherFinish,
             duration: hours,
-            source: 'Line Sampling'
+            source: 'Line Sampling',
           })
         }
       }
     }
-    
+
     // Also check conflicts from other modules (use cache to reduce API calls)
     try {
       const weekStart = weekRange.start
@@ -1390,19 +1532,24 @@ const validateSamplerRestrictions = async (
       const now = Date.now()
 
       // Check if cache is still valid
-      if (!validationCache.value.molekulisData ||
-          !validationCache.value.otherJobsData ||
-          (now - validationCache.value.lastFetch) > validationCache.value.CACHE_DURATION) {
-
+      if (
+        !validationCache.value.molekulisData ||
+        !validationCache.value.otherJobsData ||
+        now - validationCache.value.lastFetch > validationCache.value.CACHE_DURATION
+      ) {
         // Fetch Molekulis conflicts (only if cache expired) - optimized with pagination
         const [molekulisResponse, otherJobsResponse] = await Promise.all([
           listMolekulisLoadings({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' }),
-          listOtherJobs({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' })
+          listOtherJobs({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' }),
         ])
 
         // Update cache
-        validationCache.value.molekulisData = molekulisResponse.success ? molekulisResponse.data : []
-        validationCache.value.otherJobsData = otherJobsResponse.success ? otherJobsResponse.data : []
+        validationCache.value.molekulisData = molekulisResponse.success
+          ? molekulisResponse.data
+          : []
+        validationCache.value.otherJobsData = otherJobsResponse.success
+          ? otherJobsResponse.data
+          : []
         validationCache.value.lastFetch = now
       }
 
@@ -1423,7 +1570,7 @@ const validateSamplerRestrictions = async (
                   start: itemStart,
                   end: itemEnd,
                   duration: hours,
-                  source: 'Molekulis Loading'
+                  source: 'Molekulis Loading',
                 })
               }
             }
@@ -1448,7 +1595,7 @@ const validateSamplerRestrictions = async (
                   start: itemStart,
                   end: itemEnd,
                   duration: hours,
-                  source: 'Other Jobs'
+                  source: 'Other Jobs',
                 })
               }
             }
@@ -1458,9 +1605,9 @@ const validateSamplerRestrictions = async (
     } catch (error) {
       console.error('Error fetching conflicts for weekly hours validation:', error)
     }
-    
+
     const totalWeeklyHours = currentWeeklyHours + proposedShiftHours
-    
+
     if (totalWeeklyHours > WEEKLY_MAX_HOURS_24) {
       return {
         valid: false,
@@ -1471,24 +1618,25 @@ const validateSamplerRestrictions = async (
             proposedHours: proposedShiftHours,
             totalHours: totalWeeklyHours,
             maxHours: WEEKLY_MAX_HOURS_24,
-            existingShifts: existingShifts
-          }
-        }
+            existingShifts: existingShifts,
+          },
+        },
       }
     }
   }
-  
+
   // Check conflicts with other modules (use cache to reduce API calls)
   try {
     // Ensure cache is populated
     const now = Date.now()
-    if (!validationCache.value.molekulisData ||
-        !validationCache.value.otherJobsData ||
-        (now - validationCache.value.lastFetch) > validationCache.value.CACHE_DURATION) {
-
+    if (
+      !validationCache.value.molekulisData ||
+      !validationCache.value.otherJobsData ||
+      now - validationCache.value.lastFetch > validationCache.value.CACHE_DURATION
+    ) {
       const [molekulisResponse, otherJobsResponse] = await Promise.all([
         listMolekulisLoadings({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' }),
-        listOtherJobs({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' })
+        listOtherJobs({ limit: 100, sortBy: 'startAt', sortOrder: 'asc' }),
       ])
 
       validationCache.value.molekulisData = molekulisResponse.success ? molekulisResponse.data : []
@@ -1513,9 +1661,9 @@ const validateSamplerRestrictions = async (
                   start: itemStart,
                   end: itemEnd,
                   duration: `${duration.toFixed(1)}h`,
-                  source: 'Molekulis Loading'
-                }
-              }
+                  source: 'Molekulis Loading',
+                },
+              },
             }
           }
         }
@@ -1539,9 +1687,9 @@ const validateSamplerRestrictions = async (
                   start: itemStart,
                   end: itemEnd,
                   duration: `${duration.toFixed(1)}h`,
-                  source: 'Other Jobs'
-                }
-              }
+                  source: 'Other Jobs',
+                },
+              },
             }
           }
         }
@@ -1604,7 +1752,7 @@ const saveLineEdit = async (index: number) => {
       samplerName,
       startDate,
       finishDate,
-      index
+      index,
     )
 
     if (!restrictionValidation.valid) {
@@ -1618,10 +1766,10 @@ const saveLineEdit = async (index: number) => {
           proposedShift: {
             start: startDate,
             end: finishDate,
-            duration: `${proposedDuration.toFixed(1)}h`
+            duration: `${proposedDuration.toFixed(1)}h`,
           },
           restHours: restrictionValidation.conflictDetails.restHours,
-          weeklyHoursDetails: restrictionValidation.conflictDetails.weeklyHoursDetails
+          weeklyHoursDetails: restrictionValidation.conflictDetails.weeklyHoursDetails,
         }
         // Store the action to execute after override
         pendingValidationAction.value = () => {
@@ -1654,10 +1802,10 @@ const handleConflictOverride = () => {
 // Continue save after override confirmation
 const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: Date) => {
   const currentRecord = lineSamplingData.value[index]
-  
+
   // Calculate hours automatically
   const hours = calculateHoursNumber(startDate, finishDate)
-  
+
   // Check if finish time was manually changed
   const originalFinishTime = new Date(currentRecord.finishLineSamplingRaw)
   const finishTimeChanged = finishDate.getTime() !== originalFinishTime.getTime()
@@ -1669,7 +1817,9 @@ const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: 
 
     // Validate no overlap after adjustment
     if (!validateShiftsAfterAdjustment(index, startDate, finishDate, adjustedShifts)) {
-      toast.error('This shift overlaps with another shift after adjustment. Please adjust the times.')
+      toast.error(
+        'This shift overlaps with another shift after adjustment. Please adjust the times.',
+      )
       return
     }
 
@@ -1684,7 +1834,7 @@ const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: 
           adjustedShift.who,
           adjStart,
           adjEnd,
-          index + 1 + i // This shift will be at this index after adjustment
+          index + 1 + i, // This shift will be at this index after adjustment
         )
 
         if (!adjValidation.valid) {
@@ -1708,13 +1858,16 @@ const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: 
     startLineSamplingRaw: startDate.toISOString(),
     finishLineSampling: formatDateTimeForTable(finishDate.toISOString()),
     finishLineSamplingRaw: finishDate.toISOString(),
-    hours: `${hours.toFixed(2)} hrs`
+    hours: `${hours.toFixed(2)} hrs`,
   }
 
   // If finish time was manually changed, apply adjusted shifts
   if (finishTimeChanged && adjustedShifts.length > 0) {
     // Count how many existing shifts were adjusted vs new shifts added
-    const existingShiftsCount = Math.min(adjustedShifts.length, lineSamplingData.value.length - index - 1)
+    const existingShiftsCount = Math.min(
+      adjustedShifts.length,
+      lineSamplingData.value.length - index - 1,
+    )
     const newShiftsCount = Math.max(0, adjustedShifts.length - existingShiftsCount)
 
     // Apply adjusted shifts (replace existing ones)
@@ -1738,18 +1891,26 @@ const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: 
     if (firstShiftToRemove < lineSamplingData.value.length) {
       const removedCount = lineSamplingData.value.length - firstShiftToRemove
       lineSamplingData.value.splice(firstShiftToRemove)
-      
+
       if (newShiftsCount > 0 && removedCount > 0) {
-        toast.success(`Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, ${newShiftsCount} shift(s) added, and ${removedCount} shift(s) removed`)
+        toast.success(
+          `Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, ${newShiftsCount} shift(s) added, and ${removedCount} shift(s) removed`,
+        )
       } else if (newShiftsCount > 0) {
-        toast.success(`Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${newShiftsCount} shift(s) added to reach ETC`)
+        toast.success(
+          `Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${newShiftsCount} shift(s) added to reach ETC`,
+        )
       } else if (removedCount > 0) {
-        toast.success(`Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${removedCount} shift(s) removed (ETC reached)`)
+        toast.success(
+          `Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${removedCount} shift(s) removed (ETC reached)`,
+        )
       } else {
         toast.success('Line Sampling record updated and subsequent shifts adjusted')
       }
     } else if (newShiftsCount > 0) {
-      toast.success(`Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${newShiftsCount} shift(s) added to reach ETC`)
+      toast.success(
+        `Line Sampling record updated, ${existingShiftsCount} shift(s) adjusted, and ${newShiftsCount} shift(s) added to reach ETC`,
+      )
     } else {
       toast.success('Line Sampling record updated and subsequent shifts adjusted')
     }
@@ -1763,9 +1924,9 @@ const continueSaveLineEdit = async (index: number, startDate: Date, finishDate: 
     who: '',
     startLineSampling: '',
     finishLineSampling: '',
-    hours: ''
+    hours: '',
   }
-  
+
   // Auto-save after editing (only lineSampling field will be sent)
   if (hasLineSamplingGenerated.value) {
     await autoSave()
@@ -1779,7 +1940,7 @@ const cancelLineSamplingEdit = () => {
     who: '',
     startLineSampling: '',
     finishLineSampling: '',
-    hours: ''
+    hours: '',
   }
 }
 
@@ -1789,7 +1950,7 @@ const parseLocalDateTime = (dateTimeString: string): Date => {
   const [datePart, timePart] = dateTimeString.split(' ')
   const [year, month, day] = datePart.split('-').map(Number)
   const [hours, minutes] = timePart.split(':').map(Number)
-  
+
   // Create date in local timezone
   return new Date(year, month - 1, day, hours, minutes, 0, 0)
 }
@@ -1799,7 +1960,11 @@ const isGenerating = ref(false)
 
 // Handle auto generate
 const handleAutoGenerate = async () => {
-  if (!formData.value.startDischarge || formData.value.dischargeTimeHours === null || formData.value.dischargeTimeHours === undefined) {
+  if (
+    !formData.value.startDischarge ||
+    formData.value.dischargeTimeHours === null ||
+    formData.value.dischargeTimeHours === undefined
+  ) {
     toast.warning('Please fill in Start Discharge and Discharge Time (Hrs)')
     return
   }
@@ -1813,7 +1978,7 @@ const handleAutoGenerate = async () => {
       try {
         await dropdownsStore.fetchAllDropdowns()
         const selectedTerminal = dropdownsStore.terminals.find(
-          (t: Terminal) => t.name === formData.value.terminal
+          (t: Terminal) => t.name === formData.value.terminal,
         )
         if (selectedTerminal) {
           requiresLineSampling = selectedTerminal.requiresLineSampling
@@ -1825,9 +1990,8 @@ const handleAutoGenerate = async () => {
     }
 
     // Get Office Sampling data if available
-    const officeSamplingRecord = officeSamplingData.value.length > 0
-      ? officeSamplingData.value[0]
-      : undefined
+    const officeSamplingRecord =
+      officeSamplingData.value.length > 0 ? officeSamplingData.value[0] : undefined
 
     const officeSamplingFinish = officeSamplingRecord?.finishSamplingRaw
     const officeSamplingSampler = officeSamplingRecord?.who
@@ -1837,7 +2001,10 @@ const handleAutoGenerate = async () => {
     // Parse as local time to avoid timezone issues
     let startDischargeDate: Date
     let startDischargeISO: string
-    if (formData.value.startDischarge.includes('T') || formData.value.startDischarge.includes('Z')) {
+    if (
+      formData.value.startDischarge.includes('T') ||
+      formData.value.startDischarge.includes('Z')
+    ) {
       // Already in ISO format
       startDischargeDate = new Date(formData.value.startDischarge)
       startDischargeISO = formData.value.startDischarge
@@ -1853,7 +2020,9 @@ const handleAutoGenerate = async () => {
     if (!requiresLineSampling) {
       // For terminals without line sampling, calculate ETC from Start Discharge + Discharge Time Hours
       // Use the already parsed startDischargeDate to ensure correct local time calculation
-      const etcDate = new Date(startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000)
+      const etcDate = new Date(
+        startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000,
+      )
       etcISO = etcDate.toISOString()
     } else if (formData.value.etc) {
       // Use ETC from form if provided (for terminals with line sampling)
@@ -1874,7 +2043,7 @@ const handleAutoGenerate = async () => {
       officeSamplingSampler,
       officeSamplingStart,
       requiresLineSampling,
-      etcISO
+      etcISO,
     )
 
     if (result.success && result.data) {
@@ -1911,7 +2080,7 @@ const confirmClearLineSampling = () => {
     who: '',
     startLineSampling: '',
     finishLineSampling: '',
-    hours: ''
+    hours: '',
   }
   hasLineSamplingGenerated.value = false
 
@@ -1930,18 +2099,18 @@ const loadSamplingRoster = async (amspecRef: string) => {
     if (dropdownsStore.activeSamplers.length === 0) {
       await dropdownsStore.fetchAllDropdowns()
     }
-    
+
     const response = await getSamplingRosterByRef(amspecRef)
     if (response.success && response.data) {
       const roster = response.data
-      
+
       // Fill form with saved data
       formData.value.vessel = roster.vessel
       formData.value.berth = roster.berth
       formData.value.amspecRef = roster.amspecRef
       formData.value.pob = roster.pob
       formData.value.etb = roster.etb
-      
+
       // Convert startDischarge from ISO to flatpickr format
       if (roster.startDischarge) {
         const startDischargeDate = new Date(roster.startDischarge)
@@ -1952,13 +2121,13 @@ const loadSamplingRoster = async (amspecRef: string) => {
         const minutes = String(startDischargeDate.getMinutes()).padStart(2, '0')
         formData.value.startDischarge = `${year}-${month}-${day} ${hours}:${minutes}`
       }
-      
+
       formData.value.dischargeTimeHours = roster.dischargeTimeHours
       formData.value.cargo = roster.cargo
       formData.value.surveyor = roster.surveyor
       formData.value.preDischargeTest = roster.preDischargeTest || ''
       formData.value.postDischargeTest = roster.postDischargeTest || ''
-      
+
       // Cancel any ongoing edit before loading data
       if (editingIndex.value !== null) {
         cancelOfficeSamplingEdit()
@@ -1967,35 +2136,35 @@ const loadSamplingRoster = async (amspecRef: string) => {
       // Load Office Sampling data - clear first, then load if exists
       officeSamplingData.value = []
       if (roster.officeSampling && roster.officeSampling.length > 0) {
-        officeSamplingData.value = roster.officeSampling.map(record => ({
+        officeSamplingData.value = roster.officeSampling.map((record) => ({
           who: record.who,
           startOffice: formatDateTimeForTable(record.startOffice),
           startOfficeRaw: record.startOffice,
           finishSampling: formatDateTimeForTable(record.finishSampling),
           finishSamplingRaw: record.finishSampling,
-          hours: `${record.hours.toFixed(2)} hrs`
+          hours: `${record.hours.toFixed(2)} hrs`,
         }))
       }
-      
+
       // Load Line Sampling data - clear first, then load if exists
       lineSamplingData.value = []
       hasLineSamplingGenerated.value = false
       if (roster.lineSampling && roster.lineSampling.length > 0) {
-        lineSamplingData.value = roster.lineSampling.map(record => ({
+        lineSamplingData.value = roster.lineSampling.map((record) => ({
           who: record.who,
           startLineSampling: formatDateTimeForTable(record.startLineSampling),
           startLineSamplingRaw: record.startLineSampling,
           finishLineSampling: formatDateTimeForTable(record.finishLineSampling),
           finishLineSamplingRaw: record.finishLineSampling,
-          hours: `${record.hours.toFixed(2)} hrs`
+          hours: `${record.hours.toFixed(2)} hrs`,
         }))
         hasLineSamplingGenerated.value = true
       }
-      
+
       // Set editing state
       isEditing.value = true
       editingId.value = roster._id
-      
+
       // Store original data for change detection
       originalData.value = {
         amspecRef: roster.amspecRef,
@@ -2011,22 +2180,22 @@ const loadSamplingRoster = async (amspecRef: string) => {
         surveyor: roster.surveyor,
         preDischargeTest: roster.preDischargeTest || '',
         postDischargeTest: roster.postDischargeTest || '',
-        officeSampling: roster.officeSampling.map(r => ({
+        officeSampling: roster.officeSampling.map((r) => ({
           who: r.who,
           startOffice: r.startOffice,
           finishSampling: r.finishSampling,
-          hours: r.hours
+          hours: r.hours,
         })),
-        lineSampling: roster.lineSampling.map(r => ({
+        lineSampling: roster.lineSampling.map((r) => ({
           who: r.who,
           startLineSampling: r.startLineSampling,
           finishLineSampling: r.finishLineSampling,
-          hours: r.hours
-        }))
+          hours: r.hours,
+        })),
       }
-      
+
       hasUnsavedChanges.value = false
-      
+
       toast.success('Sampling roster loaded from database')
       return true
     }
@@ -2059,7 +2228,7 @@ const selectShipNomination = async (ship: ShipNomination) => {
   // Calculate Start Discharge automatically: ETB + 3 hours
   if (ship.etb) {
     const etbDate = new Date(ship.etb)
-    const startDischargeDate = new Date(etbDate.getTime() + (3 * 60 * 60 * 1000))
+    const startDischargeDate = new Date(etbDate.getTime() + 3 * 60 * 60 * 1000)
     // Format for flatpickr: 'Y-m-d H:i'
     const year = startDischargeDate.getFullYear()
     const month = String(startDischargeDate.getMonth() + 1).padStart(2, '0')
@@ -2131,7 +2300,9 @@ const handlePobChange = async (selectedDates: Date[]) => {
 
     // Recalculate ETC: Start Discharge + Discharge Time Hours (if available)
     if (formData.value.dischargeTimeHours && formData.value.dischargeTimeHours > 0) {
-      const etcDate = new Date(startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000)
+      const etcDate = new Date(
+        startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000,
+      )
       const etcYear = etcDate.getFullYear()
       const etcMonth = String(etcDate.getMonth() + 1).padStart(2, '0')
       const etcDay = String(etcDate.getDate()).padStart(2, '0')
@@ -2173,7 +2344,9 @@ const handleEtbChange = async (selectedDates: Date[]) => {
 
     // Recalculate ETC: Start Discharge + Discharge Time Hours (if available)
     if (formData.value.dischargeTimeHours && formData.value.dischargeTimeHours > 0) {
-      const etcDate = new Date(startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000)
+      const etcDate = new Date(
+        startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000,
+      )
       const etcYear = etcDate.getFullYear()
       const etcMonth = String(etcDate.getMonth() + 1).padStart(2, '0')
       const etcDay = String(etcDate.getDate()).padStart(2, '0')
@@ -2204,7 +2377,9 @@ const handleStartDischargeChange = async (selectedDates: Date[]) => {
 
     // Recalculate ETC: Start Discharge + Discharge Time Hours (if available)
     if (formData.value.dischargeTimeHours && formData.value.dischargeTimeHours > 0) {
-      const etcDate = new Date(startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000)
+      const etcDate = new Date(
+        startDischargeDate.getTime() + formData.value.dischargeTimeHours * 60 * 60 * 1000,
+      )
       const etcYear = etcDate.getFullYear()
       const etcMonth = String(etcDate.getMonth() + 1).padStart(2, '0')
       const etcDay = String(etcDate.getDate()).padStart(2, '0')
@@ -2272,16 +2447,24 @@ const batchSyncWithShipNomination = async () => {
     // Prepare update data for all pending fields
     const updateData: Partial<ShipNominationData> = {}
 
+    // Helper to convert flatpickr format (Y-m-d H:i) to ISO string
+    const toISO = (dateStr: string): string => {
+      if (!dateStr) return ''
+      if (dateStr.includes('T') || dateStr.includes('Z')) return dateStr
+      const date = new Date(dateStr.replace(' ', 'T'))
+      return !isNaN(date.getTime()) ? date.toISOString() : ''
+    }
+
     for (const field of pendingSyncFields.value) {
       switch (field) {
         case 'pob':
-          updateData.pilotOnBoard = formData.value.pob
+          updateData.pilotOnBoard = toISO(formData.value.pob)
           break
         case 'etb':
-          updateData.etb = formData.value.etb
+          updateData.etb = toISO(formData.value.etb)
           break
         case 'etc':
-          updateData.etc = formData.value.etc
+          updateData.etc = toISO(formData.value.etc)
           break
         case 'startDischarge':
           // Start Discharge is not stored in Ship Nomination, only in Sampling Roster
@@ -2298,7 +2481,7 @@ const batchSyncWithShipNomination = async () => {
       socket.emit('ship-nomination:update', {
         id: shipNomination._id,
         amspecReference: formData.value.amspecRef,
-        updates: updateData
+        updates: updateData,
       })
     }
 
@@ -2386,7 +2569,7 @@ const formData = ref<SamplingRosterData>({
   cargo: '',
   surveyor: '',
   preDischargeTest: '',
-  postDischargeTest: ''
+  postDischargeTest: '',
 })
 
 // Date/Time picker configuration
@@ -2397,12 +2580,11 @@ const dateTimeConfig = {
   altFormat: 'F j, Y at H:i',
   time_24hr: true,
   minuteIncrement: 15,
-  locale: { firstDayOfWeek: 1 }
+  locale: { firstDayOfWeek: 1 },
 }
 
 // Use surveyor options from store
 // Surveyor options removed as they were unused
-
 
 // Form submission
 const isSubmitting = ref(false)
@@ -2453,9 +2635,17 @@ const validateForm = async () => {
   submittedOnce.value = true
 
   // Check all required fields
-  if (!formData.value.vessel || !formData.value.berth || !formData.value.amspecRef ||
-      !formData.value.pob || !formData.value.etb || !formData.value.startDischarge ||
-      !formData.value.dischargeTimeHours || !formData.value.cargo || !formData.value.surveyor) {
+  if (
+    !formData.value.vessel ||
+    !formData.value.berth ||
+    !formData.value.amspecRef ||
+    !formData.value.pob ||
+    !formData.value.etb ||
+    !formData.value.startDischarge ||
+    !formData.value.dischargeTimeHours ||
+    !formData.value.cargo ||
+    !formData.value.surveyor
+  ) {
     toast.warning('Please fill in all required fields')
     return false
   }
@@ -2473,45 +2663,44 @@ const validateForm = async () => {
 
 // Prepare data for saving
 const prepareDataForSave = (): SamplingRosterDataService => {
-  // Convert startDischarge to ISO format
-  let startDischargeISO: string
-  if (formData.value.startDischarge.includes('T') || formData.value.startDischarge.includes('Z')) {
-    startDischargeISO = formData.value.startDischarge
-  } else {
-    const startDate = new Date(formData.value.startDischarge.replace(' ', 'T'))
-    startDischargeISO = startDate.toISOString()
+  // Helper to convert flatpickr format (Y-m-d H:i) to ISO string
+  const toISO = (dateStr: string): string => {
+    if (!dateStr) return ''
+    if (dateStr.includes('T') || dateStr.includes('Z')) return dateStr
+    const date = new Date(dateStr.replace(' ', 'T'))
+    return !isNaN(date.getTime()) ? date.toISOString() : ''
   }
 
   // Convert Office Sampling data
-  const officeSampling = officeSamplingData.value.map(record => ({
+  const officeSampling = officeSamplingData.value.map((record) => ({
     who: record.who,
     startOffice: record.startOfficeRaw,
     finishSampling: record.finishSamplingRaw,
-    hours: parseFloat(record.hours.replace(' hrs', '')) || 0
+    hours: parseFloat(record.hours.replace(' hrs', '')) || 0,
   }))
 
   // Convert Line Sampling data
-  const lineSampling = lineSamplingData.value.map(record => ({
+  const lineSampling = lineSamplingData.value.map((record) => ({
     who: record.who,
     startLineSampling: record.startLineSamplingRaw,
     finishLineSampling: record.finishLineSamplingRaw,
-    hours: parseFloat(record.hours.replace(' hrs', '')) || 0
+    hours: parseFloat(record.hours.replace(' hrs', '')) || 0,
   }))
 
   return {
     amspecRef: formData.value.amspecRef,
     vessel: formData.value.vessel,
     berth: formData.value.berth,
-    pob: formData.value.pob,
-    etb: formData.value.etb,
-    startDischarge: startDischargeISO,
+    pob: toISO(formData.value.pob),
+    etb: toISO(formData.value.etb),
+    startDischarge: toISO(formData.value.startDischarge),
     dischargeTimeHours: formData.value.dischargeTimeHours || 0,
     cargo: formData.value.cargo,
     surveyor: formData.value.surveyor,
     preDischargeTest: formData.value.preDischargeTest,
     postDischargeTest: formData.value.postDischargeTest,
     officeSampling,
-    lineSampling
+    lineSampling,
   }
 }
 
@@ -2557,35 +2746,42 @@ const checkForChanges = () => {
   }
 
   const currentData = prepareDataForSave()
-  
+
   // Simple comparison - check if data has changed
   const originalStr = JSON.stringify(originalData.value)
   const currentStr = JSON.stringify(currentData)
-  
+
   hasUnsavedChanges.value = originalStr !== currentStr
 }
 
 // Watch for changes in form data
-watch([formData, officeSamplingData, lineSamplingData], () => {
-  if (isEditing.value) {
-    checkForChanges()
-  }
-}, { deep: true })
+watch(
+  [formData, officeSamplingData, lineSamplingData],
+  () => {
+    if (isEditing.value) {
+      checkForChanges()
+    }
+  },
+  { deep: true },
+)
 
 // Watch for dischargeTimeHours changes to recalculate ETC
-watch(() => formData.value.dischargeTimeHours, (newValue) => {
-  if (newValue && formData.value.startDischarge) {
-    // Recalculate ETC when discharge time changes
-    const startDischargeDate = new Date(formData.value.startDischarge)
-    const etcDate = new Date(startDischargeDate.getTime() + newValue * 60 * 60 * 1000)
-    const etcYear = etcDate.getFullYear()
-    const etcMonth = String(etcDate.getMonth() + 1).padStart(2, '0')
-    const etcDay = String(etcDate.getDate()).padStart(2, '0')
-    const etcHours = String(etcDate.getHours()).padStart(2, '0')
-    const etcMinutes = String(etcDate.getMinutes()).padStart(2, '0')
-    formData.value.etc = `${etcYear}-${etcMonth}-${etcDay} ${etcHours}:${etcMinutes}`
-  }
-})
+watch(
+  () => formData.value.dischargeTimeHours,
+  (newValue) => {
+    if (newValue && formData.value.startDischarge) {
+      // Recalculate ETC when discharge time changes
+      const startDischargeDate = new Date(formData.value.startDischarge)
+      const etcDate = new Date(startDischargeDate.getTime() + newValue * 60 * 60 * 1000)
+      const etcYear = etcDate.getFullYear()
+      const etcMonth = String(etcDate.getMonth() + 1).padStart(2, '0')
+      const etcDay = String(etcDate.getDate()).padStart(2, '0')
+      const etcHours = String(etcDate.getHours()).padStart(2, '0')
+      const etcMinutes = String(etcDate.getMinutes()).padStart(2, '0')
+      formData.value.etc = `${etcYear}-${etcMonth}-${etcDay} ${etcHours}:${etcMinutes}`
+    }
+  },
+)
 
 const handleSubmit = async () => {
   if (isSubmitting.value) return
@@ -2606,17 +2802,17 @@ const handleSubmit = async () => {
   for (let i = 0; i < lineSamplingData.value.length; i++) {
     const shift = lineSamplingData.value[i]
     if (!shift.who || !shift.startLineSamplingRaw || !shift.finishLineSamplingRaw) continue
-    
+
     const shiftStart = new Date(shift.startLineSamplingRaw)
     const shiftEnd = new Date(shift.finishLineSamplingRaw)
-    
+
     const restrictionValidation = await validateSamplerRestrictions(
       shift.who,
       shiftStart,
       shiftEnd,
-      i
+      i,
     )
-    
+
     if (!restrictionValidation.valid) {
       // If conflict details are available, show override modal
       if (restrictionValidation.conflictDetails) {
@@ -2628,10 +2824,10 @@ const handleSubmit = async () => {
           proposedShift: {
             start: shiftStart,
             end: shiftEnd,
-            duration: `${proposedDuration.toFixed(1)}h`
+            duration: `${proposedDuration.toFixed(1)}h`,
           },
           restHours: restrictionValidation.conflictDetails.restHours,
-          weeklyHoursDetails: restrictionValidation.conflictDetails.weeklyHoursDetails
+          weeklyHoursDetails: restrictionValidation.conflictDetails.weeklyHoursDetails,
         }
         // Store the action to execute after override
         pendingValidationAction.value = () => {
@@ -2643,7 +2839,9 @@ const handleSubmit = async () => {
         return
       } else {
         // No conflict details, show error toast
-        toast.error(`Shift ${i + 1}: ${restrictionValidation.reason || 'Sampler validation failed'}`)
+        toast.error(
+          `Shift ${i + 1}: ${restrictionValidation.reason || 'Sampler validation failed'}`,
+        )
         isSubmitting.value = false
         return
       }
@@ -2658,9 +2856,12 @@ const handleSubmit = async () => {
 const continueSave = async () => {
   try {
     const dataToSave = prepareDataForSave()
-    
+
     if (isEditing.value && editingId.value) {
-      const response = await updateSamplingRoster(editingId.value, dataToSave as Partial<SamplingRosterDataService>)
+      const response = await updateSamplingRoster(
+        editingId.value,
+        dataToSave as Partial<SamplingRosterDataService>,
+      )
       if (response.success && response.data) {
         originalData.value = dataToSave
         hasUnsavedChanges.value = false
@@ -2702,7 +2903,7 @@ const resetForm = () => {
     cargo: '',
     surveyor: '',
     preDischargeTest: '',
-    postDischargeTest: ''
+    postDischargeTest: '',
   }
   officeSamplingData.value = []
   lineSamplingData.value = []
@@ -2730,26 +2931,36 @@ onMounted(async () => {
       const { shipNominations, molekulisLoadings, otherJobs, dropdowns } = response.data
 
       // Update ship nominations store
-      shipNominations.forEach(ship => shipsStore.addShip(ship))
+      shipNominations.forEach((ship) => shipsStore.addShip(ship))
 
       // Update stores
-      molekulisStore.setLoadings(molekulisLoadings.map(l => ({ ...l, status: (l.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
-      otherJobsStore.setJobs(otherJobs.map(j => ({ ...j, status: (j.status || 'pending') as 'pending' | 'in-progress' | 'completed' })))
+      molekulisStore.setLoadings(
+        molekulisLoadings.map((l) => ({
+          ...l,
+          status: (l.status || 'pending') as 'pending' | 'in-progress' | 'completed',
+        })),
+      )
+      otherJobsStore.setJobs(
+        otherJobs.map((j) => ({
+          ...j,
+          status: (j.status || 'pending') as 'pending' | 'in-progress' | 'completed',
+        })),
+      )
 
       // Update dropdowns store with manual data setting
       // (since batch returns different format than individual endpoints)
-      dropdownsStore.surveyors = dropdowns.surveyors.map(name => ({ name, isActive: true }))
+      dropdownsStore.surveyors = dropdowns.surveyors.map((name) => ({ name, isActive: true }))
       dropdownsStore.activeSurveyors = dropdowns.surveyors
-      
-      dropdownsStore.samplers = dropdowns.samplers.map(s => ({
+
+      dropdownsStore.samplers = dropdowns.samplers.map((s) => ({
         name: s.name,
         isActive: true, // Batch API returns only active samplers
         has24HourRestriction: s.has24HourRestriction,
-        restrictedDays: s.restrictedDays
+        restrictedDays: s.restrictedDays,
       }))
       // Update activeSamplers when setting samplers manually
       // Batch API returns only active samplers, so all should be included
-      dropdownsStore.activeSamplers = dropdowns.samplers.map(s => s.name)
+      dropdownsStore.activeSamplers = dropdowns.samplers.map((s) => s.name)
 
       // Update validation cache with molekulis and other jobs data
       validationCache.value.molekulisData = molekulisLoadings
@@ -2762,10 +2973,7 @@ onMounted(async () => {
     console.error('❌ Error loading initialization data:', error)
     // Fallback to individual calls if batch fails
     console.log('Falling back to individual API calls...')
-    await Promise.all([
-      loadInitialShipNominations(),
-      dropdownsStore.fetchAllDropdowns()
-    ])
+    await Promise.all([loadInitialShipNominations(), dropdownsStore.fetchAllDropdowns()])
   }
 
   // Setup WebSocket listeners for real-time updates (notifications handled centrally)
@@ -2791,14 +2999,10 @@ onMounted(async () => {
     validationCache.value.molekulisData?.push(loading)
 
     // Check for sampler conflicts
-    const conflicts = detectSamplerConflicts(
-      molekulisStore.loadings,
-      otherJobsStore.jobs,
-      []
-    )
+    const conflicts = detectSamplerConflicts(molekulisStore.loadings, otherJobsStore.jobs, [])
 
     if (conflicts.length > 0) {
-      conflicts.forEach(conflict => {
+      conflicts.forEach((conflict) => {
         toast.warning(formatConflictMessage(conflict), { timeout: 8000 })
       })
     }
@@ -2806,7 +3010,7 @@ onMounted(async () => {
 
   socket.on('molekulis-loading:updated', (loading: MolekulisLoading) => {
     // Store is already updated by central notification handler
-    const index = validationCache.value.molekulisData?.findIndex(m => m._id === loading._id) ?? -1
+    const index = validationCache.value.molekulisData?.findIndex((m) => m._id === loading._id) ?? -1
     if (index !== -1 && validationCache.value.molekulisData) {
       validationCache.value.molekulisData[index] = loading
     }
@@ -2815,7 +3019,9 @@ onMounted(async () => {
   socket.on('molekulis-loading:deleted', (data: { id: string }) => {
     // Store is already updated by central notification handler
     if (validationCache.value.molekulisData) {
-      validationCache.value.molekulisData = validationCache.value.molekulisData.filter(m => m._id !== data.id)
+      validationCache.value.molekulisData = validationCache.value.molekulisData.filter(
+        (m) => m._id !== data.id,
+      )
     }
   })
 
@@ -2825,14 +3031,10 @@ onMounted(async () => {
     validationCache.value.otherJobsData?.push(job)
 
     // Check for sampler conflicts
-    const conflicts = detectSamplerConflicts(
-      molekulisStore.loadings,
-      otherJobsStore.jobs,
-      []
-    )
+    const conflicts = detectSamplerConflicts(molekulisStore.loadings, otherJobsStore.jobs, [])
 
     if (conflicts.length > 0) {
-      conflicts.forEach(conflict => {
+      conflicts.forEach((conflict) => {
         toast.warning(formatConflictMessage(conflict), { timeout: 8000 })
       })
     }
@@ -2840,7 +3042,7 @@ onMounted(async () => {
 
   socket.on('other-job:updated', (job: OtherJob) => {
     // Store is already updated by central notification handler
-    const index = validationCache.value.otherJobsData?.findIndex(o => o._id === job._id) ?? -1
+    const index = validationCache.value.otherJobsData?.findIndex((o) => o._id === job._id) ?? -1
     if (index !== -1 && validationCache.value.otherJobsData) {
       validationCache.value.otherJobsData[index] = job
     }
@@ -2849,7 +3051,9 @@ onMounted(async () => {
   socket.on('other-job:deleted', (data: { id: string }) => {
     // Store is already updated by central notification handler
     if (validationCache.value.otherJobsData) {
-      validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(o => o._id !== data.id)
+      validationCache.value.otherJobsData = validationCache.value.otherJobsData.filter(
+        (o) => o._id !== data.id,
+      )
     }
   })
 })
