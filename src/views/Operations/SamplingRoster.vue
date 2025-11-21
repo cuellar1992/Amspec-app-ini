@@ -2092,6 +2092,21 @@ const confirmClearLineSampling = () => {
   toast.success('Line Sampling data cleared')
 }
 
+// Helper to format ISO string to flatpickr format (Y-m-d H:i) in local time
+const formatIsoToLocalFlatpickr = (isoString: string): string => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  if (isNaN(date.getTime())) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 // Load sampling roster from MongoDB
 const loadSamplingRoster = async (amspecRef: string) => {
   try {
@@ -2108,19 +2123,13 @@ const loadSamplingRoster = async (amspecRef: string) => {
       formData.value.vessel = roster.vessel
       formData.value.berth = roster.berth
       formData.value.amspecRef = roster.amspecRef
-      formData.value.pob = roster.pob
-      formData.value.etb = roster.etb
+      
+      // Convert UTC ISO strings to local time for flatpickr
+      formData.value.pob = formatIsoToLocalFlatpickr(roster.pob)
+      formData.value.etb = formatIsoToLocalFlatpickr(roster.etb)
 
       // Convert startDischarge from ISO to flatpickr format
-      if (roster.startDischarge) {
-        const startDischargeDate = new Date(roster.startDischarge)
-        const year = startDischargeDate.getFullYear()
-        const month = String(startDischargeDate.getMonth() + 1).padStart(2, '0')
-        const day = String(startDischargeDate.getDate()).padStart(2, '0')
-        const hours = String(startDischargeDate.getHours()).padStart(2, '0')
-        const minutes = String(startDischargeDate.getMinutes()).padStart(2, '0')
-        formData.value.startDischarge = `${year}-${month}-${day} ${hours}:${minutes}`
-      }
+      formData.value.startDischarge = formatIsoToLocalFlatpickr(roster.startDischarge)
 
       formData.value.dischargeTimeHours = roster.dischargeTimeHours
       formData.value.cargo = roster.cargo
@@ -2218,9 +2227,9 @@ const selectShipNomination = async (ship: ShipNomination) => {
   formData.value.vessel = ship.vesselName
   formData.value.berth = ship.berth || ''
   formData.value.amspecRef = ship.amspecReference
-  formData.value.pob = ship.pilotOnBoard || ''
-  formData.value.etb = ship.etb || ''
-  formData.value.etc = ship.etc || ''
+  formData.value.pob = formatIsoToLocalFlatpickr(ship.pilotOnBoard || '')
+  formData.value.etb = formatIsoToLocalFlatpickr(ship.etb || '')
+  formData.value.etc = formatIsoToLocalFlatpickr(ship.etc || '')
   formData.value.terminal = ship.terminal || ''
   formData.value.cargo = ship.productTypes?.join(', ') || ''
   formData.value.surveyor = ship.surveyor || ''
