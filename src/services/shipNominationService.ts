@@ -201,12 +201,16 @@ export interface SamplerHours {
 export const getSamplersHoursSummary = async (
   week?: number,
   year?: number,
-  targetHours: number = 38
+  targetHours: number = 38,
+  startDate?: string,
+  endDate?: string
 ): Promise<ApiResponse<SamplerHours[]>> => {
-  const params: { week?: number; year?: number; targetHours?: number } = {}
+  const params: { week?: number; year?: number; targetHours?: number; startDate?: string; endDate?: string } = {}
   if (week) params.week = week
   if (year) params.year = year
   if (targetHours !== 38) params.targetHours = targetHours
+  if (startDate) params.startDate = startDate
+  if (endDate) params.endDate = endDate
 
   const response = await api.get('/samplers/hours-summary', { params })
   return response.data
@@ -215,12 +219,16 @@ export const getSamplersHoursSummary = async (
 export const getSamplersMonthSummary = async (
   month?: number,
   year?: number,
-  targetHours: number = 38
+  targetHours: number = 38,
+  startDate?: string,
+  endDate?: string
 ): Promise<ApiResponse<SamplerHours[]>> => {
-  const params: { month?: number; year?: number; targetHours?: number } = {}
+  const params: { month?: number; year?: number; targetHours?: number; startDate?: string; endDate?: string } = {}
   if (month) params.month = month
   if (year) params.year = year
   if (targetHours !== 38) params.targetHours = targetHours
+  if (startDate) params.startDate = startDate
+  if (endDate) params.endDate = endDate
 
   const response = await api.get('/samplers/month-summary', { params })
   return response.data

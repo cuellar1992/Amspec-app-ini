@@ -8,7 +8,7 @@ import Sampler from '../models/Sampler.js'
 // @access  Public
 export const getSamplersMonthSummary = async (req, res) => {
   try {
-    const { month, year, targetHours = 38 } = req.query
+    const { month, year, targetHours = 38, startDate, endDate } = req.query
     const currentDate = new Date()
     const currentYear = year ? parseInt(year) : currentDate.getFullYear()
     const currentMonth = month ? parseInt(month) : currentDate.getMonth() + 1
@@ -16,10 +16,10 @@ export const getSamplersMonthSummary = async (req, res) => {
     // Get all samplers with their restrictions
     const allSamplers = await Sampler.find({ isActive: true })
     const samplerRestrictions = new Map()
-    allSamplers.forEach(sampler => {
+    allSamplers.forEach((sampler) => {
       samplerRestrictions.set(sampler.name, {
         has24HourRestriction: sampler.has24HourRestriction,
-        restrictedDays: sampler.restrictedDays
+        restrictedDays: sampler.restrictedDays,
       })
     })
 
@@ -27,24 +27,31 @@ export const getSamplersMonthSummary = async (req, res) => {
     const samplingRosterData = await SamplingRoster.find({
       $or: [
         { 'officeSampling.startOffice': { $exists: true } },
-        { 'lineSampling.startLineSampling': { $exists: true } }
-      ]
+        { 'lineSampling.startLineSampling': { $exists: true } },
+      ],
     }).lean()
 
     // Get all MolekulisLoading records
     const molekulisData = await MolekulisLoading.find({
-      startAt: { $exists: true }
+      startAt: { $exists: true },
     }).lean()
 
     // Get all OtherJob records
     const otherJobData = await OtherJob.find({
-      startAt: { $exists: true }
+      startAt: { $exists: true },
     }).lean()
 
-    // Helper function to calculate hours in a month
+    // Helper function to calculate hours in a month (or custom range)
     const calculateHoursInMonth = (workStart, workEnd, year, month) => {
-      const monthStart = new Date(year, month - 1, 1, 0, 0, 0, 0)
-      const monthEnd = new Date(year, month, 0, 23, 59, 59, 999)
+      let monthStart, monthEnd
+
+      if (startDate && endDate) {
+        monthStart = new Date(startDate)
+        monthEnd = new Date(endDate)
+      } else {
+        monthStart = new Date(year, month - 1, 1, 0, 0, 0, 0)
+        monthEnd = new Date(year, month, 0, 23, 59, 59, 999)
+      }
 
       const intersectionStart = new Date(Math.max(workStart.getTime(), monthStart.getTime()))
       const intersectionEnd = new Date(Math.min(workEnd.getTime(), monthEnd.getTime()))
@@ -61,13 +68,18 @@ export const getSamplersMonthSummary = async (req, res) => {
     const samplerMap = new Map()
 
     // Add SamplingRoster office hours
-    samplingRosterData.forEach(record => {
+    samplingRosterData.forEach((record) => {
       if (record.officeSampling && record.officeSampling.length > 0) {
-        record.officeSampling.forEach(item => {
+        record.officeSampling.forEach((item) => {
           if (item.who && item.startOffice && item.finishSampling) {
             const workStart = new Date(item.startOffice)
             const workEnd = new Date(item.finishSampling)
-            const hoursInMonth = calculateHoursInMonth(workStart, workEnd, currentYear, currentMonth)
+            const hoursInMonth = calculateHoursInMonth(
+              workStart,
+              workEnd,
+              currentYear,
+              currentMonth,
+            )
 
             if (hoursInMonth > 0) {
               const sampler = samplerMap.get(item.who) || {
@@ -79,8 +91,8 @@ export const getSamplersMonthSummary = async (req, res) => {
                   officeSampling: 0,
                   lineSampling: 0,
                   molekulisLoading: 0,
-                  otherJobs: 0
-                }
+                  otherJobs: 0,
+                },
               }
               sampler.breakdown.officeSampling += hoursInMonth
               sampler.totalHours += hoursInMonth
@@ -92,13 +104,18 @@ export const getSamplersMonthSummary = async (req, res) => {
     })
 
     // Add SamplingRoster line hours
-    samplingRosterData.forEach(record => {
+    samplingRosterData.forEach((record) => {
       if (record.lineSampling && record.lineSampling.length > 0) {
-        record.lineSampling.forEach(item => {
+        record.lineSampling.forEach((item) => {
           if (item.who && item.startLineSampling && item.finishLineSampling) {
             const workStart = new Date(item.startLineSampling)
             const workEnd = new Date(item.finishLineSampling)
-            const hoursInMonth = calculateHoursInMonth(workStart, workEnd, currentYear, currentMonth)
+            const hoursInMonth = calculateHoursInMonth(
+              workStart,
+              workEnd,
+              currentYear,
+              currentMonth,
+            )
 
             if (hoursInMonth > 0) {
               const sampler = samplerMap.get(item.who) || {
@@ -110,8 +127,8 @@ export const getSamplersMonthSummary = async (req, res) => {
                   officeSampling: 0,
                   lineSampling: 0,
                   molekulisLoading: 0,
-                  otherJobs: 0
-                }
+                  otherJobs: 0,
+                },
               }
               sampler.breakdown.lineSampling += hoursInMonth
               sampler.totalHours += hoursInMonth
@@ -123,7 +140,7 @@ export const getSamplersMonthSummary = async (req, res) => {
     })
 
     // Add MolekulisLoading hours
-    molekulisData.forEach(item => {
+    molekulisData.forEach((item) => {
       if (item.who && item.startAt && item.endAt) {
         const workStart = new Date(item.startAt)
         const workEnd = new Date(item.endAt)
@@ -139,8 +156,8 @@ export const getSamplersMonthSummary = async (req, res) => {
               officeSampling: 0,
               lineSampling: 0,
               molekulisLoading: 0,
-              otherJobs: 0
-            }
+              otherJobs: 0,
+            },
           }
           sampler.breakdown.molekulisLoading += hoursInMonth
           sampler.totalHours += hoursInMonth
@@ -150,7 +167,7 @@ export const getSamplersMonthSummary = async (req, res) => {
     })
 
     // Add OtherJob hours
-    otherJobData.forEach(item => {
+    otherJobData.forEach((item) => {
       if (item.who && item.startAt && item.endAt) {
         const workStart = new Date(item.startAt)
         const workEnd = new Date(item.endAt)
@@ -166,8 +183,8 @@ export const getSamplersMonthSummary = async (req, res) => {
               officeSampling: 0,
               lineSampling: 0,
               molekulisLoading: 0,
-              otherJobs: 0
-            }
+              otherJobs: 0,
+            },
           }
           sampler.breakdown.otherJobs += hoursInMonth
           sampler.totalHours += hoursInMonth
@@ -177,9 +194,12 @@ export const getSamplersMonthSummary = async (req, res) => {
     })
 
     // Calculate percentages (monthly target = weekly target * 4.33 weeks)
-    const result = Array.from(samplerMap.values()).map(sampler => {
-      const restriction = samplerRestrictions.get(sampler.samplerName) || { has24HourRestriction: false }
-      const monthlyTargetHours = (restriction.has24HourRestriction ? 24 : parseFloat(targetHours)) * 4.33
+    const result = Array.from(samplerMap.values()).map((sampler) => {
+      const restriction = samplerRestrictions.get(sampler.samplerName) || {
+        has24HourRestriction: false,
+      }
+      const monthlyTargetHours =
+        (restriction.has24HourRestriction ? 24 : parseFloat(targetHours)) * 4.33
 
       const percentage = (sampler.totalHours / monthlyTargetHours) * 100
       let status
@@ -198,7 +218,7 @@ export const getSamplersMonthSummary = async (req, res) => {
         targetHours: Math.round(monthlyTargetHours * 100) / 100,
         has24HourRestriction: restriction.has24HourRestriction,
         restrictedDays: restriction.restrictedDays,
-        status
+        status,
       }
     })
 
@@ -211,13 +231,13 @@ export const getSamplersMonthSummary = async (req, res) => {
       month: currentMonth,
       year: currentYear,
       targetHours: parseFloat(targetHours),
-      totalSamplers: result.length
+      totalSamplers: result.length,
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching samplers month summary',
-      error: error.message
+      error: error.message,
     })
   }
 }
@@ -227,7 +247,7 @@ export const getSamplersMonthSummary = async (req, res) => {
 // @access  Public
 export const getSamplersHoursSummary = async (req, res) => {
   try {
-    const { week, year, targetHours = 38 } = req.query
+    const { week, year, targetHours = 38, startDate: queryStartDate, endDate: queryEndDate } = req.query
     const currentDate = new Date()
     const currentYear = year ? parseInt(year) : currentDate.getFullYear()
     const currentWeek = week ? parseInt(week) : getWeekNumber(currentDate)
@@ -235,33 +255,41 @@ export const getSamplersHoursSummary = async (req, res) => {
     // Get all samplers with their restrictions
     const allSamplers = await Sampler.find({ isActive: true })
     const samplerRestrictions = new Map()
-    allSamplers.forEach(sampler => {
+    allSamplers.forEach((sampler) => {
       samplerRestrictions.set(sampler.name, {
         has24HourRestriction: sampler.has24HourRestriction,
-        restrictedDays: sampler.restrictedDays
+        restrictedDays: sampler.restrictedDays,
       })
     })
 
     // Calculate date range for the specified week
-    const startDate = getStartOfWeek(currentYear, currentWeek)
-    const endDate = getEndOfWeek(currentYear, currentWeek)
+    // Calculate date range for the specified week
+    let startDate, endDate
+
+    if (queryStartDate && queryEndDate) {
+      startDate = new Date(queryStartDate)
+      endDate = new Date(queryEndDate)
+    } else {
+      startDate = getStartOfWeek(currentYear, currentWeek)
+      endDate = getEndOfWeek(currentYear, currentWeek)
+    }
 
     // Get all SamplingRoster records (we'll filter by intersection in JavaScript)
     const samplingRosterData = await SamplingRoster.find({
       $or: [
         { 'officeSampling.startOffice': { $exists: true } },
-        { 'lineSampling.startLineSampling': { $exists: true } }
-      ]
+        { 'lineSampling.startLineSampling': { $exists: true } },
+      ],
     }).lean()
 
     // Get all MolekulisLoading records (we'll filter by intersection in JavaScript)
     const molekulisData = await MolekulisLoading.find({
-      startAt: { $exists: true }
+      startAt: { $exists: true },
     }).lean()
 
     // Get all OtherJob records (we'll filter by intersection in JavaScript)
     const otherJobData = await OtherJob.find({
-      startAt: { $exists: true }
+      startAt: { $exists: true },
     }).lean()
 
     // Helper function to calculate intersection hours between two date ranges
@@ -282,9 +310,9 @@ export const getSamplersHoursSummary = async (req, res) => {
     const samplerMap = new Map()
 
     // Add SamplingRoster office hours with proper date intersection
-    samplingRosterData.forEach(record => {
+    samplingRosterData.forEach((record) => {
       if (record.officeSampling && record.officeSampling.length > 0) {
-        record.officeSampling.forEach(item => {
+        record.officeSampling.forEach((item) => {
           if (item.who && item.startOffice && item.finishSampling) {
             const workStart = new Date(item.startOffice)
             const workEnd = new Date(item.finishSampling)
@@ -302,8 +330,8 @@ export const getSamplersHoursSummary = async (req, res) => {
                   officeSampling: 0,
                   lineSampling: 0,
                   molekulisLoading: 0,
-                  otherJobs: 0
-                }
+                  otherJobs: 0,
+                },
               }
               sampler.breakdown.officeSampling += hoursInWeek
               sampler.totalHours += hoursInWeek
@@ -315,9 +343,9 @@ export const getSamplersHoursSummary = async (req, res) => {
     })
 
     // Add SamplingRoster line hours with proper date intersection
-    samplingRosterData.forEach(record => {
+    samplingRosterData.forEach((record) => {
       if (record.lineSampling && record.lineSampling.length > 0) {
-        record.lineSampling.forEach(item => {
+        record.lineSampling.forEach((item) => {
           if (item.who && item.startLineSampling && item.finishLineSampling) {
             const workStart = new Date(item.startLineSampling)
             const workEnd = new Date(item.finishLineSampling)
@@ -335,8 +363,8 @@ export const getSamplersHoursSummary = async (req, res) => {
                   officeSampling: 0,
                   lineSampling: 0,
                   molekulisLoading: 0,
-                  otherJobs: 0
-                }
+                  otherJobs: 0,
+                },
               }
               sampler.breakdown.lineSampling += hoursInWeek
               sampler.totalHours += hoursInWeek
@@ -348,7 +376,7 @@ export const getSamplersHoursSummary = async (req, res) => {
     })
 
     // Add MolekulisLoading hours with proper date intersection
-    molekulisData.forEach(item => {
+    molekulisData.forEach((item) => {
       if (item.who && item.startAt && item.endAt) {
         const workStart = new Date(item.startAt)
         const workEnd = new Date(item.endAt)
@@ -366,8 +394,8 @@ export const getSamplersHoursSummary = async (req, res) => {
               officeSampling: 0,
               lineSampling: 0,
               molekulisLoading: 0,
-              otherJobs: 0
-            }
+              otherJobs: 0,
+            },
           }
           sampler.breakdown.molekulisLoading += hoursInWeek
           sampler.totalHours += hoursInWeek
@@ -377,7 +405,7 @@ export const getSamplersHoursSummary = async (req, res) => {
     })
 
     // Add OtherJob hours with proper date intersection
-    otherJobData.forEach(item => {
+    otherJobData.forEach((item) => {
       if (item.who && item.startAt && item.endAt) {
         const workStart = new Date(item.startAt)
         const workEnd = new Date(item.endAt)
@@ -395,8 +423,8 @@ export const getSamplersHoursSummary = async (req, res) => {
               officeSampling: 0,
               lineSampling: 0,
               molekulisLoading: 0,
-              otherJobs: 0
-            }
+              otherJobs: 0,
+            },
           }
           sampler.breakdown.otherJobs += hoursInWeek
           sampler.totalHours += hoursInWeek
@@ -406,9 +434,11 @@ export const getSamplersHoursSummary = async (req, res) => {
     })
 
     // Convert to array and calculate percentages
-    const result = Array.from(samplerMap.values()).map(sampler => {
+    const result = Array.from(samplerMap.values()).map((sampler) => {
       // Get sampler restriction (default to false if not found)
-      const restriction = samplerRestrictions.get(sampler.samplerName) || { has24HourRestriction: false }
+      const restriction = samplerRestrictions.get(sampler.samplerName) || {
+        has24HourRestriction: false,
+      }
       const samplerTargetHours = restriction.has24HourRestriction ? 24 : parseFloat(targetHours)
 
       const percentage = (sampler.totalHours / samplerTargetHours) * 100
@@ -428,7 +458,7 @@ export const getSamplersHoursSummary = async (req, res) => {
         targetHours: samplerTargetHours,
         has24HourRestriction: restriction.has24HourRestriction,
         restrictedDays: restriction.restrictedDays,
-        status
+        status,
       }
     })
 
@@ -441,13 +471,13 @@ export const getSamplersHoursSummary = async (req, res) => {
       week: currentWeek,
       year: currentYear,
       targetHours: parseFloat(targetHours),
-      totalSamplers: result.length
+      totalSamplers: result.length,
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching samplers hours summary',
-      error: error.message
+      error: error.message,
     })
   }
 }

@@ -246,23 +246,33 @@ const fetchData = async () => {
     let response
 
     if (viewMode.value === 'week') {
+      const startDate = getStartOfWeek(currentYear, selectedWeek.value)
+      const endDate = getEndOfWeek(currentYear, selectedWeek.value)
+
       response = await getSamplersHoursSummary(
         selectedWeek.value || undefined,
         undefined,
-        targetHours.value
+        targetHours.value,
+        startDate.toISOString(),
+        endDate.toISOString()
       )
     } else {
+      const startDate = new Date(currentYear, selectedMonth.value - 1, 1, 0, 0, 0, 0)
+      const endDate = new Date(currentYear, selectedMonth.value, 0, 23, 59, 59, 999)
+
       response = await getSamplersMonthSummary(
         selectedMonth.value,
         undefined,
-        targetHours.value
+        targetHours.value,
+        startDate.toISOString(),
+        endDate.toISOString()
       )
     }
 
     if (response.success && response.data) {
       samplersHours.value = response.data
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching samplers hours:', err)
   } finally {
     loading.value = false
