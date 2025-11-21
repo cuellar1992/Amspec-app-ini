@@ -38,10 +38,10 @@
 **Problema:**
 ```typescript
 // vite.config.ts línea 10
-base: process.env.NODE_ENV === 'production' ? '/tailadmin-vuejs/' : '/',
+base: process.env.NODE_ENV === 'production' ? '/' : '/',
 ```
 
-**Impacto:** El frontend no funcionará correctamente en producción porque está usando un base path incorrecto (`/tailadmin-vuejs/`).
+**Impacto:** El frontend no funcionará correctamente en producción porque está usando un base path incorrecto (ya corregido a `/`).
 
 **Solución:** Cambiar a `/` para producción normal.
 

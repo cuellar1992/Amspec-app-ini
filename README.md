@@ -1,7 +1,7 @@
-# TailAdmin Vue.js Dashboard
+# AmSpec Dashboard
 
 #### Preview
- - [Demo](https://themewagon.github.io/tailadmin-vuejs/)
+ - [Demo](https://amspec.com/)
 
 #### Download
  - [Download from ThemeWagon](https://themewagon.com/themes/tailadmin-vuejs/)
@@ -26,11 +26,11 @@ npm run preview
 
 ## Author 
 ```
-Design and code is completely written by TailAdmin and development team. 
+Design and code is completely written by AmSpec and development team. 
 ```
 
 ## License
 
- - Design and Code is Copyright &copy; [TailAdmin](https://tailadmin.com/)
+ - Design and Code is Copyright &copy; [AmSpec](https://amspecgroup.com/)
  - Licensed cover under [MIT]
- - Distributed by [ThemeWagon](https://themewagon.com)
+ - 
