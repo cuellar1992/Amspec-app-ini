@@ -44,12 +44,16 @@ const setSuperAdmin = async () => {
     const args = getArgs();
 
     let email = args.email;
+    let password = args.password;
+    let name = args.name;
     let enable = args.enable !== 'false'; // Por defecto true, false si se pasa --enable false
 
     // Si no se proporcionó email, solicitarlo interactivamente
     if (!email) {
       console.log('Please enter the following information:\n');
       email = await askQuestion('User Email: ');
+      password = await askQuestion('Password (leave empty to keep existing): ');
+      name = await askQuestion('Name (leave empty to keep existing): ');
       const enableInput = await askQuestion('Enable Super Admin? (yes/no) [yes]: ');
       enable = !enableInput || enableInput.toLowerCase() === 'yes' || enableInput.toLowerCase() === 'y';
     }
@@ -65,24 +69,65 @@ const setSuperAdmin = async () => {
     await connectDB();
 
     // Buscar el usuario (incluir el campo isSuperAdmin explícitamente)
-    const user = await User.findOne({ email }).select('+isSuperAdmin');
+    let user = await User.findOne({ email }).select('+isSuperAdmin');
 
+    // Si el usuario no existe, crearlo
     if (!user) {
-      console.error(`\n❌ Error: User with email ${email} not found\n`);
-      process.exit(1);
+      console.log(`\n👤 User with email ${email} not found. Creating new user...`);
+
+      // Validar que se proporcionó contraseña para usuario nuevo
+      if (!password) {
+        console.error('\n❌ Error: Password is required for new users\n');
+        process.exit(1);
+      }
+
+      if (password.length < 8) {
+        console.error('\n❌ Error: Password must be at least 8 characters\n');
+        process.exit(1);
+      }
+
+      user = new User({
+        email: email.toLowerCase(),
+        password,
+        name: name || email.split('@')[0],
+        role: 'admin',
+        isSuperAdmin: enable,
+        isActive: true,
+      });
+
+      await user.save();
+      console.log('✅ New user created successfully');
+    } else {
+      // Usuario existe, actualizarlo
+      console.log(`\n👤 User found. Updating Super Admin status...`);
+
+      // Actualizar el estado de Super Admin
+      user.isSuperAdmin = enable;
+
+      // Si se está habilitando como super admin, asegurarse de que tenga rol admin
+      if (enable && user.role !== 'admin') {
+        user.role = 'admin';
+        console.log('📝 Role automatically set to admin');
+      }
+
+      // Actualizar contraseña si se proporcionó
+      if (password && password.trim() !== '') {
+        if (password.length < 8) {
+          console.error('\n❌ Error: Password must be at least 8 characters\n');
+          process.exit(1);
+        }
+        user.password = password;
+        console.log('🔑 Password updated');
+      }
+
+      // Actualizar nombre si se proporcionó
+      if (name && name.trim() !== '') {
+        user.name = name;
+        console.log('📝 Name updated');
+      }
+
+      await user.save();
     }
-
-    // Actualizar el estado de Super Admin
-    console.log(`\n${enable ? '👑 Enabling' : '🔓 Disabling'} Super Admin privileges...`);
-    user.isSuperAdmin = enable;
-
-    // Si se está habilitando como super admin, asegurarse de que tenga rol admin
-    if (enable && user.role !== 'admin') {
-      user.role = 'admin';
-      console.log('📝 Role automatically set to admin');
-    }
-
-    await user.save();
 
     console.log(`\n✅ Super Admin status ${enable ? 'enabled' : 'disabled'} successfully!`);
     console.log('\n📋 User details:');

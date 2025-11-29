@@ -202,6 +202,95 @@ userSchema.methods.revokeAllRefreshTokens = async function () {
   });
 };
 
+// Middleware para prevenir eliminación accidental de Super Admins
+userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+  // Verificar si este usuario es un Super Admin
+  const isSuperAdmin = this.isSuperAdmin;
+
+  // Log de auditoría
+  console.log(`[AUDIT] Attempting to delete user: ${this.email} (isSuperAdmin: ${isSuperAdmin})`);
+
+  if (isSuperAdmin) {
+    console.log(`[AUDIT] BLOCKED: Cannot delete Super Admin user: ${this.email}`);
+    const error = new Error('Cannot delete Super Admin user. Super Admins are protected from deletion.');
+    error.name = 'ProtectedUserError';
+    return next(error);
+  }
+
+  console.log(`[AUDIT] User deleted: ${this.email}`);
+  next();
+});
+
+// Middleware para prevenir eliminación de Super Admins en queries
+userSchema.pre('deleteOne', { document: false, query: true }, async function (next) {
+  try {
+    const query = this.getQuery();
+    const user = await this.model.findOne(query).select('+isSuperAdmin');
+
+    if (user) {
+      console.log(`[AUDIT] Attempting to delete user (query): ${user.email} (isSuperAdmin: ${user.isSuperAdmin})`);
+
+      if (user.isSuperAdmin) {
+        console.log(`[AUDIT] BLOCKED: Cannot delete Super Admin user: ${user.email}`);
+        const error = new Error('Cannot delete Super Admin user. Super Admins are protected from deletion.');
+        error.name = 'ProtectedUserError';
+        return next(error);
+      }
+
+      console.log(`[AUDIT] User deleted (query): ${user.email}`);
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Middleware para prevenir eliminación múltiple que incluya Super Admins
+userSchema.pre('deleteMany', async function (next) {
+  try {
+    const query = this.getQuery();
+    const superAdmins = await this.model.find(query).select('+isSuperAdmin');
+
+    const hasSuperAdmin = superAdmins.some(user => user.isSuperAdmin);
+
+    if (hasSuperAdmin) {
+      const error = new Error('Cannot delete Super Admin users. Super Admins are protected from deletion.');
+      error.name = 'ProtectedUserError';
+      return next(error);
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Middleware para prevenir findByIdAndDelete de Super Admins
+userSchema.pre('findOneAndDelete', async function (next) {
+  try {
+    const query = this.getQuery();
+    const user = await this.model.findOne(query).select('+isSuperAdmin');
+
+    if (user) {
+      console.log(`[AUDIT] Attempting to delete user (findOneAndDelete): ${user.email} (isSuperAdmin: ${user.isSuperAdmin})`);
+
+      if (user.isSuperAdmin) {
+        console.log(`[AUDIT] BLOCKED: Cannot delete Super Admin user: ${user.email}`);
+        const error = new Error('Cannot delete Super Admin user. Super Admins are protected from deletion.');
+        error.name = 'ProtectedUserError';
+        return next(error);
+      }
+
+      console.log(`[AUDIT] User deleted (findOneAndDelete): ${user.email}`);
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 const User = mongoose.model('User', userSchema);
 
 export default User;

@@ -12,7 +12,13 @@
       "Bash(npm install compression)",
       "Bash(npm install pinia)",
       "Bash(npm install socket.io)",
-      "Bash(npm install socket.io-client)"
+      "Bash(npm install socket.io-client)",
+      "Bash(dir:*)",
+      "Bash(npm run test:superadmin:*)",
+      "Bash(npm run set:superadmin:*)",
+      "Bash(npm run check:users:*)",
+      "Bash(npm run test:superadmin:login:*)",
+      "Bash(npm run test:superadmin:visibility:*)"
     ],
     "deny": [],
     "ask": []

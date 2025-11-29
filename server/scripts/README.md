@@ -6,11 +6,13 @@ Este directorio contiene scripts útiles para la gestión de usuarios y configur
 
 ### 1. Set Super Admin (`setSuperAdmin.js`)
 
-Marca o desmarca un usuario como Super Admin. Los Super Admins:
+**NUEVO:** Crea o actualiza un usuario como Super Admin. Los Super Admins:
 - Son **invisibles** para usuarios admin normales
 - Solo pueden ser vistos/modificados por otros Super Admins
 - Tienen acceso completo a todas las funcionalidades del sistema
-- No pueden ser editados ni eliminados por admins regulares
+- **PROTEGIDOS**: No pueden ser editados ni eliminados por admins regulares
+- **PROTEGIDOS**: No pueden ser eliminados por scripts de seeds
+- **AUTO-CREACIÓN**: Si el usuario no existe, se crea automáticamente
 
 #### Uso Interactivo
 
@@ -21,13 +23,21 @@ npm run set:superadmin
 
 El script te pedirá:
 1. El email del usuario
-2. Si quieres habilitar o deshabilitar Super Admin
+2. La contraseña (si es un usuario nuevo o quieres cambiarla)
+3. El nombre (opcional)
+4. Si quieres habilitar o deshabilitar Super Admin
 
 #### Uso con Parámetros
 
 ```bash
-# Habilitar Super Admin
+# Crear nuevo Super Admin
+npm run set:superadmin -- --email usuario@ejemplo.com --password "miPassword123" --name "Super Admin" --enable true
+
+# Habilitar Super Admin en usuario existente
 npm run set:superadmin -- --email usuario@ejemplo.com --enable true
+
+# Actualizar contraseña de Super Admin existente
+npm run set:superadmin -- --email usuario@ejemplo.com --password "nuevaPassword123"
 
 # Deshabilitar Super Admin
 npm run set:superadmin -- --email usuario@ejemplo.com --enable false
@@ -127,6 +137,13 @@ El sistema implementa las siguientes protecciones para Super Admins:
    - Los admins regulares NO pueden eliminar Super Admins
    - Solo Super Admins pueden eliminar otros Super Admins
    - Retorna error 403 si un admin regular intenta eliminar un Super Admin
+
+4. **Protección a nivel de Base de Datos (NUEVO)**
+   - El modelo User tiene middlewares que previenen eliminación de Super Admins
+   - `User.deleteOne()` - Verifica si es Super Admin y previene eliminación
+   - `User.deleteMany()` - Previene eliminación masiva que incluya Super Admins
+   - Retorna error `ProtectedUserError` si se intenta eliminar un Super Admin
+   - **Protege contra scripts de seeds y operaciones accidentales**
 
 ### Modelo de Datos
 
